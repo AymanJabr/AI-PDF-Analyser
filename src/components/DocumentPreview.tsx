@@ -1,0 +1,63 @@
+'use client'
+
+import { useState } from 'react'
+import { ChevronLeft, ChevronRight, FileText } from 'lucide-react'
+import { ProcessedDocument } from '@/types'
+
+interface DocumentPreviewProps {
+  document: ProcessedDocument
+}
+
+export default function DocumentPreview({ document }: DocumentPreviewProps) {
+  const [currentPage, setCurrentPage] = useState(0)
+
+  const handlePreviousPage = () => {
+    setCurrentPage((prev) => Math.max(0, prev - 1))
+  }
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(document.pageCount - 1, prev + 1))
+  }
+
+  return (
+    <div className='flex flex-col h-full border rounded-lg overflow-hidden bg-white'>
+      <div className='flex items-center justify-between p-3 border-b bg-gray-50'>
+        <div className='flex items-center'>
+          <FileText className='h-5 w-5 text-gray-500 mr-2' />
+          <h3 className='font-medium text-gray-700 truncate'>
+            {document.name}
+          </h3>
+        </div>
+        <div className='flex items-center text-sm text-gray-500'>
+          Page {currentPage + 1} of {document.pageCount}
+        </div>
+      </div>
+
+      <div className='flex-1 overflow-y-auto p-4'>
+        <div className='whitespace-pre-wrap bg-gray-50 p-4 rounded border font-mono text-sm'>
+          {document.pageContents[currentPage]}
+        </div>
+      </div>
+
+      <div className='p-3 border-t flex items-center justify-between'>
+        <button
+          onClick={handlePreviousPage}
+          disabled={currentPage === 0}
+          className='flex items-center p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:hover:bg-transparent transition-colors'
+        >
+          <ChevronLeft className='h-5 w-5' />
+          <span className='ml-1'>Previous</span>
+        </button>
+
+        <button
+          onClick={handleNextPage}
+          disabled={currentPage === document.pageCount - 1}
+          className='flex items-center p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:hover:bg-transparent transition-colors'
+        >
+          <span className='mr-1'>Next</span>
+          <ChevronRight className='h-5 w-5' />
+        </button>
+      </div>
+    </div>
+  )
+}

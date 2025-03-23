@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI PDF Analyzer
+
+A Next.js application that allows users to upload PDF documents, extract text using OCR, and ask natural language questions about the content using AI. The AI provides answers with references to the specific locations in the document where the information was found.
+
+## Features
+
+- **PDF Upload**: Upload any PDF document for analysis
+- **Text Extraction**: Extract text from PDFs, including OCR capabilities for scanned documents
+- **AI Chat Interface**: Ask questions about the document and get accurate answers
+- **Source Citations**: AI responses include references to the specific parts of the document
+- **Multiple AI Provider Support**: Configure either OpenAI or Anthropic API keys
+
+## Tech Stack
+
+- **Frontend**: Next.js, React, TypeScript, Tailwind CSS
+- **PDF Processing**: PDF.js, Tesseract.js for OCR
+- **AI Integration**: LangChain with OpenAI and Anthropic support
+- **Document Analysis**: Text chunking and retrieval for accurate references
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+ and pnpm
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3. Start the development server:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-## Learn More
+## Usage
 
-To learn more about Next.js, take a look at the following resources:
+1. Configure your API key (OpenAI or Anthropic) in the "API Settings" tab
+2. Upload a PDF document in the "Upload Document" tab
+3. Switch to the "Chat with Document" tab
+4. Ask questions about the document content
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Important Notes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- This application does not store or send your API keys to any server; they are stored in your browser's localStorage
+- Document processing happens on the server, but the AI interactions use your API key
+- For better OCR results with scanned documents, ensure the documents are clear and well-scanned
 
-## Deploy on Vercel
+## License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+MIT
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Acknowledgments
+
+- Built with [Next.js](https://nextjs.org/)
+- Uses [LangChain](https://js.langchain.com/) for AI interactions
+- Uses [Tesseract.js](https://github.com/naptha/tesseract.js) for OCR capabilities
