@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { OpenAI } from '@langchain/openai'
-import { Anthropic } from '@langchain/anthropic'
+import { ChatAnthropic } from '@langchain/anthropic'
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
-import { TFIDBFRetriever } from '@langchain/community/retrievers/tf_idf'
+import { MemoryVectorStore } from 'langchain/vectorstores/memory'
+import { Document } from 'langchain/document'
 import { DocumentReference, ProcessedDocument } from '@/types'
+import { FakeEmbeddings } from 'langchain/embeddings/fake'
 
 // In-memory document storage from analyze route
 // In a production app, this would be a database
@@ -37,7 +39,7 @@ export async function POST(req: NextRequest) {
         temperature: 0,
       })
     } else {
-      model = new Anthropic({
+      model = new ChatAnthropic({
         apiKey: apiKeyConfig.apiKey,
         modelName: 'claude-3-sonnet-20240229',
         temperature: 0,
@@ -51,7 +53,7 @@ export async function POST(req: NextRequest) {
     })
 
     // Split text into chunks with metadata for page reference
-    const docs = []
+    const docs: Document[] = []
     for (let i = 0; i < document.pageContents.length; i++) {
       const pageContent = document.pageContents[i]
       const chunks = await textSplitter.createDocuments(
@@ -61,14 +63,23 @@ export async function POST(req: NextRequest) {
       docs.push(...chunks)
     }
 
-    // Create a simple retriever
-    const retriever = new TFIDBFRetriever({ documents: docs })
+    // Create a simple in-memory vector store with fake embeddings
+    // In a real app, you would use real embeddings like OpenAIEmbeddings
+    const vectorStore = await MemoryVectorStore.fromDocuments(
+      docs,
+      new FakeEmbeddings()
+    )
+
+    // Use the vector store as a retriever
+    const retriever = vectorStore.asRetriever(4) // Get top 4 most relevant chunks
 
     // Get relevant documents for the query
-    const relevantDocs = await retriever.getRelevantDocuments(message)
+    const relevantDocs = await retriever.invoke(message)
 
     // Format the context from relevant documents
-    const context = relevantDocs.map((doc) => doc.pageContent).join('\n\n')
+    const context = relevantDocs
+      .map((doc: Document) => doc.pageContent)
+      .join('\n\n')
 
     // Format the prompt with context and instruction to cite sources
     const prompt = `
@@ -90,10 +101,12 @@ export async function POST(req: NextRequest) {
     const response = await model.invoke(prompt)
 
     // Extract references from relevant docs
-    const references: DocumentReference[] = relevantDocs.map((doc) => ({
-      pageNumber: doc.metadata.pageNumber,
-      text: doc.pageContent.substring(0, 150), // Truncate for display
-    }))
+    const references: DocumentReference[] = relevantDocs.map(
+      (doc: Document) => ({
+        pageNumber: doc.metadata.pageNumber as number,
+        text: doc.pageContent.substring(0, 150), // Truncate for display
+      })
+    )
 
     return NextResponse.json({
       response,

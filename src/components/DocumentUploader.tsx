@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { FileUp, Loader2 } from 'lucide-react'

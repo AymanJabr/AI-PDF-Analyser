@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useRef, useEffect } from 'react'
 import { Send, Loader2, FileText } from 'lucide-react'
 import { Message, DocumentReference, ApiKeyConfig } from '@/types'
@@ -89,9 +91,9 @@ export default function ChatInterface({
             isUser ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-800'
           }`}
         >
-          <ReactMarkdown className='prose prose-sm max-w-none'>
-            {message.content}
-          </ReactMarkdown>
+          <div className='prose prose-sm max-w-none'>
+            <ReactMarkdown>{message.content}</ReactMarkdown>
+          </div>
 
           {message.references && message.references.length > 0 && (
             <div className='mt-2 pt-2 border-t border-gray-200 text-xs text-gray-600'>
