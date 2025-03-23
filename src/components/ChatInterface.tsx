@@ -43,6 +43,7 @@ export default function ChatInterface({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify({
           documentId,
@@ -52,7 +53,11 @@ export default function ChatInterface({
       })
 
       if (!response.ok) {
-        throw new Error('Failed to get response')
+        const errorData = await response.json().catch(() => null)
+        console.error('API error:', response.status, errorData)
+        throw new Error(
+          `Failed to get response: ${response.status} ${response.statusText}`
+        )
       }
 
       const data = await response.json()
@@ -66,6 +71,7 @@ export default function ChatInterface({
       setMessages((prev) => [...prev, assistantMessage])
     } catch (error) {
       // Add error message
+      console.error('Chat error:', error)
       setMessages((prev) => [
         ...prev,
         {

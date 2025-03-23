@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { OpenAI } from '@langchain/openai'
+import { ChatOpenAI } from '@langchain/openai'
 import { ChatAnthropic } from '@langchain/anthropic'
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
 import { MemoryVectorStore } from 'langchain/vectorstores/memory'
 import { Document } from 'langchain/document'
 import { DocumentReference } from '@/types'
 import { FakeEmbeddings } from 'langchain/embeddings/fake'
-import { documents } from '../analyze/route'
+import { documents } from '@/lib/documentStore'
 
+// Define both handler methods explicitly with named exports
 export async function POST(req: NextRequest) {
   try {
-    const { documentId, message, apiKeyConfig } = await req.json()
+    // Parse the request
+    const body = await req.json()
+    const { documentId, message, apiKeyConfig } = body
 
     if (!documentId || !message || !apiKeyConfig) {
       return NextResponse.json(
@@ -30,7 +33,7 @@ export async function POST(req: NextRequest) {
     // Set up model based on provider
     let model
     if (apiKeyConfig.provider === 'openai') {
-      model = new OpenAI({
+      model = new ChatOpenAI({
         apiKey: apiKeyConfig.apiKey,
         modelName: 'gpt-3.5-turbo',
         temperature: 0,
@@ -61,7 +64,6 @@ export async function POST(req: NextRequest) {
     }
 
     // Create a simple in-memory vector store with fake embeddings
-    // In a real app, you would use real embeddings like OpenAIEmbeddings
     const vectorStore = await MemoryVectorStore.fromDocuments(
       docs,
       new FakeEmbeddings()
@@ -106,7 +108,7 @@ export async function POST(req: NextRequest) {
     )
 
     return NextResponse.json({
-      response,
+      response: typeof response === 'string' ? response : response.content,
       references,
     })
   } catch (error) {
@@ -116,4 +118,12 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+// Add a GET handler for completeness
+export async function GET() {
+  return NextResponse.json(
+    { message: 'Chat API is running. Use POST to send messages.' },
+    { status: 200 }
+  )
 }

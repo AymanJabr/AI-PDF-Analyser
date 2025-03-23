@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import pdfParse from 'pdf-parse/lib/pdf-parse.js'
 import { generateId, formatDate } from '@/lib/utils'
 import { ProcessedDocument } from '@/types'
-
-// In-memory storage for documents
-// In a production app, this would be a database
-export const documents: Record<string, ProcessedDocument> = {}
+import { documents } from '@/lib/documentStore'
 
 export async function POST(req: NextRequest) {
   try {
