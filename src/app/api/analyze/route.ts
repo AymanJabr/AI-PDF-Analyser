@@ -19,26 +19,69 @@ export async function POST(req: NextRequest) {
     // Extract text from PDF using pdf-parse
     const pdfData = await pdfParse(buffer)
 
-    // For OCR, we would normally process the PDF page by page
-    // This is a simplified version - in a real app we would:
-    // 1. Extract each page as an image
-    // 2. Run OCR on each image
-    // For now, we'll just use the pdf-parse result and simulate page separation
-
-    // Simulate page separation (this is a simplification)
-    const totalText = pdfData.text
-    const approximateCharsPerPage = 3000
+    // Use actual pages from the PDF instead of arbitrary divisions
+    // Note: This is a custom approach to extract page content separately
+    // since pdf-parse doesn't provide per-page text directly
     const pageContents: string[] = []
 
-    // Divide the text into pages based on a rough character count
-    // In a real app, we'd extract actual pages from the PDF
-    for (let i = 0; i < totalText.length; i += approximateCharsPerPage) {
-      pageContents.push(totalText.slice(i, i + approximateCharsPerPage))
+    // Include the page count from the actual PDF
+    const pageCount = pdfData.numpages
+
+    // If pdf-parse provides the text as a whole, we'll try to divide it by common page delimiters
+    const totalText = pdfData.text
+
+    if (pageCount <= 1) {
+      // If there's only one page, use the entire text
+      pageContents.push(totalText)
+    } else {
+      // Try to identify page breaks in the extracted text
+      // This is a simplification - in a real app we would use a proper PDF library that supports
+      // per-page extraction or process the PDF page by page using OCR
+
+      // Common markers that appear at page boundaries
+      const pageDelimiters = [
+        /\f/g, // Form feed character often marks page breaks
+        /\n\s*\d+\s*\n/g, // Page numbers often appear alone
+      ]
+
+      // Split text by potential page breaks
+      let pages: string[] = [totalText]
+      for (const delimiter of pageDelimiters) {
+        const newPages: string[] = []
+        for (const page of pages) {
+          const parts = page.split(delimiter)
+          if (parts.length > 1) {
+            newPages.push(...parts.filter((p) => p.trim().length > 0))
+          } else {
+            newPages.push(page)
+          }
+        }
+        pages = newPages
+      }
+
+      // If we successfully split into a reasonable number of pages, use those
+      if (pages.length > 1 && pages.length <= pageCount * 2) {
+        pageContents.push(...pages)
+      } else {
+        // Fallback to simple division
+        const approxLengthPerPage = Math.ceil(totalText.length / pageCount)
+        for (let i = 0; i < pageCount; i++) {
+          const start = i * approxLengthPerPage
+          const end = Math.min((i + 1) * approxLengthPerPage, totalText.length)
+          pageContents.push(totalText.slice(start, end))
+        }
+      }
     }
 
-    // If no pages were created, create at least one
-    if (pageContents.length === 0) {
-      pageContents.push(totalText)
+    // Ensure we have the right number of pages
+    while (pageContents.length < pageCount) {
+      pageContents.push('Page content could not be extracted')
+    }
+
+    // If we have too many pages, merge extras
+    if (pageContents.length > pageCount) {
+      const extraPages = pageContents.splice(pageCount)
+      pageContents[pageCount - 1] += '\n' + extraPages.join('\n')
     }
 
     // Create document record
@@ -48,7 +91,7 @@ export async function POST(req: NextRequest) {
       name: file.name,
       text: totalText,
       pageContents,
-      pageCount: pageContents.length,
+      pageCount: pageCount,
       dateUploaded: formatDate(new Date()),
     }
 
