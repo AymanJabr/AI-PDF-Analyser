@@ -41,8 +41,8 @@ export default function AppLayout() {
   }
 
   return (
-    <div className='flex flex-col min-h-screen'>
-      <header className='bg-white border-b'>
+    <div className='flex flex-col min-h-screen bg-gray-50'>
+      <header className='bg-white border-b sticky top-0 z-10'>
         <div className='max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center'>
             <div className='flex items-center'>
@@ -53,17 +53,17 @@ export default function AppLayout() {
         </div>
       </header>
 
-      <main className='flex-1 bg-gray-50'>
+      <main className='flex-1'>
         <div className='max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8'>
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
             className='space-y-4'
           >
-            <TabsList className='w-full'>
+            <TabsList className='w-full flex flex-wrap'>
               <TabsTrigger
                 value='upload'
-                className='flex-1 flex items-center justify-center'
+                className='flex-1 flex items-center justify-center min-w-[120px]'
                 disabled={false}
               >
                 <FileText className='h-4 w-4 mr-2' />
@@ -72,7 +72,7 @@ export default function AppLayout() {
 
               <TabsTrigger
                 value='chat'
-                className='flex-1 flex items-center justify-center'
+                className='flex-1 flex items-center justify-center min-w-[120px]'
                 disabled={!documentId || !apiKeyConfig}
               >
                 <Brain className='h-4 w-4 mr-2' />
@@ -81,7 +81,7 @@ export default function AppLayout() {
 
               <TabsTrigger
                 value='settings'
-                className='flex-1 flex items-center justify-center'
+                className='flex-1 flex items-center justify-center min-w-[120px]'
                 disabled={false}
               >
                 <Settings className='h-4 w-4 mr-2' />
@@ -89,7 +89,7 @@ export default function AppLayout() {
               </TabsTrigger>
             </TabsList>
 
-            <div className='bg-white p-6 rounded-lg shadow'>
+            <div className='bg-white p-4 sm:p-6 rounded-lg shadow'>
               <TabsContent value='upload'>
                 <div className='max-w-3xl mx-auto py-4'>
                   <h2 className='text-lg font-medium mb-4 text-center'>
@@ -101,13 +101,13 @@ export default function AppLayout() {
                 </div>
               </TabsContent>
 
-              <TabsContent value='chat'>
+              <TabsContent value='chat' className='w-full'>
                 {document && apiKeyConfig ? (
-                  <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 h-[70vh]'>
-                    <div className='h-full'>
+                  <div className='flex flex-col lg:flex-row gap-4 h-[70vh] w-full'>
+                    <div className='w-full lg:w-1/2 h-[30vh] lg:h-full'>
                       <DocumentPreview document={document} />
                     </div>
-                    <div className='h-full border rounded-lg overflow-hidden bg-white'>
+                    <div className='w-full lg:w-1/2 h-[40vh] lg:h-full border rounded-lg overflow-hidden bg-white'>
                       <ChatInterface
                         documentId={documentId as string}
                         apiKeyConfig={apiKeyConfig}
@@ -138,7 +138,7 @@ export default function AppLayout() {
         </div>
       </main>
 
-      <footer className='bg-white border-t py-4'>
+      <footer className='bg-white border-t py-4 mt-auto'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <p className='text-center text-sm text-gray-500'>
             PDF Analyzer - AI-powered document analysis

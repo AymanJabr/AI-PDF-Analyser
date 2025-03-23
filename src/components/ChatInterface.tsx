@@ -84,10 +84,10 @@ export default function ChatInterface({
     return (
       <div
         key={index}
-        className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}
+        className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3`}
       >
         <div
-          className={`max-w-[75%] rounded-lg px-4 py-2 ${
+          className={`max-w-[85%] sm:max-w-[75%] rounded-lg px-3 py-2 ${
             isUser ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-800'
           }`}
         >
@@ -102,9 +102,9 @@ export default function ChatInterface({
                 {message.references.map((ref: DocumentReference, i: number) => (
                   <li key={i} className='flex items-start'>
                     <FileText className='h-3 w-3 mr-1 mt-0.5 flex-shrink-0' />
-                    <span>
-                      Page {ref.pageNumber}: {ref.text.substring(0, 60)}
-                      {ref.text.length > 60 ? '...' : ''}
+                    <span className='text-xs'>
+                      Page {ref.pageNumber}: {ref.text.substring(0, 40)}
+                      {ref.text.length > 40 ? '...' : ''}
                     </span>
                   </li>
                 ))}
@@ -118,36 +118,38 @@ export default function ChatInterface({
 
   return (
     <div className='flex flex-col h-full'>
-      <div className='flex-1 overflow-y-auto p-4 space-y-4'>
+      <div className='flex-1 overflow-y-auto p-2 sm:p-4 space-y-3'>
         {messages.length === 0 ? (
           <div className='flex items-center justify-center h-full text-gray-500'>
             <div className='text-center'>
-              <FileText className='h-10 w-10 mx-auto mb-2 text-gray-400' />
-              <p>Ask a question about the document</p>
+              <FileText className='h-8 w-8 mx-auto mb-2 text-gray-400' />
+              <p className='text-sm'>Ask a question about the document</p>
             </div>
           </div>
         ) : (
           messages.map(renderMessage)
         )}
         {isLoading && (
-          <div className='flex justify-start mb-4'>
-            <div className='bg-gray-100 rounded-lg px-4 py-2 flex items-center space-x-2'>
+          <div className='flex justify-start mb-3'>
+            <div className='bg-gray-100 rounded-lg px-3 py-2 flex items-center space-x-2'>
               <Loader2 className='h-4 w-4 animate-spin text-gray-500' />
-              <span className='text-gray-500 text-sm'>Thinking...</span>
+              <span className='text-gray-500 text-xs sm:text-sm'>
+                Thinking...
+              </span>
             </div>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      <div className='border-t p-4'>
+      <div className='border-t p-2 sm:p-4'>
         <form onSubmit={handleSubmit} className='flex space-x-2'>
           <input
             type='text'
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder='Ask a question about the document...'
-            className='flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500'
+            className='flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500'
             disabled={isLoading}
           />
           <button
@@ -156,9 +158,9 @@ export default function ChatInterface({
             className='bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50'
           >
             {isLoading ? (
-              <Loader2 className='h-5 w-5 animate-spin' />
+              <Loader2 className='h-4 w-4 sm:h-5 sm:w-5 animate-spin' />
             ) : (
-              <Send className='h-5 w-5' />
+              <Send className='h-4 w-4 sm:h-5 sm:w-5' />
             )}
           </button>
         </form>
