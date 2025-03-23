@@ -1,13 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { Brain, FileText, Settings } from 'lucide-react'
+import { FileText, Settings } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs'
 import DocumentUploader from './DocumentUploader'
 import ApiKeyConfig from './ApiKeyConfig'
 import ChatInterface from './ChatInterface'
 import DocumentPreview from './DocumentPreview'
 import { ApiKeyConfig as ApiKeyConfigType, ProcessedDocument } from '@/types'
+import Logo from './Logo'
 
 export default function AppLayout() {
   const [activeTab, setActiveTab] = useState('upload')
@@ -46,7 +47,7 @@ export default function AppLayout() {
         <div className='max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center'>
             <div className='flex items-center'>
-              <Brain className='h-8 w-8 text-blue-500 mr-2' />
+              <Logo width={32} height={32} className='mr-2' />
               <h1 className='text-xl font-bold text-gray-800'>PDF Analyzer</h1>
             </div>
           </div>
@@ -75,7 +76,7 @@ export default function AppLayout() {
                 className='flex-1 flex items-center justify-center min-w-[120px]'
                 disabled={!documentId || !apiKeyConfig}
               >
-                <Brain className='h-4 w-4 mr-2' />
+                <Logo width={16} height={16} className='mr-2' />
                 Chat with Document
               </TabsTrigger>
 
