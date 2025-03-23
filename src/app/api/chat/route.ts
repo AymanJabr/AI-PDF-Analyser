@@ -4,12 +4,9 @@ import { ChatAnthropic } from '@langchain/anthropic'
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
 import { MemoryVectorStore } from 'langchain/vectorstores/memory'
 import { Document } from 'langchain/document'
-import { DocumentReference, ProcessedDocument } from '@/types'
+import { DocumentReference } from '@/types'
 import { FakeEmbeddings } from 'langchain/embeddings/fake'
-
-// In-memory document storage from analyze route
-// In a production app, this would be a database
-declare const documents: Record<string, ProcessedDocument>
+import { documents } from '../analyze/route'
 
 export async function POST(req: NextRequest) {
   try {

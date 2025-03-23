@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import * as pdfParse from 'pdf-parse'
+import pdfParse from 'pdf-parse/lib/pdf-parse.js'
 import { generateId, formatDate } from '@/lib/utils'
 import { ProcessedDocument } from '@/types'
 
 // In-memory storage for documents
 // In a production app, this would be a database
-const documents: Record<string, ProcessedDocument> = {}
+export const documents: Record<string, ProcessedDocument> = {}
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer())
 
     // Extract text from PDF using pdf-parse
-    const pdfData = await pdfParse.default(buffer)
+    const pdfData = await pdfParse(buffer)
 
     // For OCR, we would normally process the PDF page by page
     // This is a simplified version - in a real app we would:
