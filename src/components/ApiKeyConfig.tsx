@@ -17,6 +17,7 @@ export default function ApiKeyConfig({
   const [model, setModel] = useState<string>('')
   const [showApiKey, setShowApiKey] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [isLoadingModels, setIsLoadingModels] = useState(false)
   const [models, setModels] = useState<ModelInfo[]>([])
 
@@ -27,6 +28,7 @@ export default function ApiKeyConfig({
 
       setIsLoadingModels(true)
       setError(null)
+      setSuccess(null)
 
       try {
         const response = await fetch(
@@ -108,11 +110,13 @@ export default function ApiKeyConfig({
 
     if (!apiKey) {
       setError('Please enter your API key')
+      setSuccess(null)
       return
     }
 
     if (!model) {
       setError('Please select a model')
+      setSuccess(null)
       return
     }
 
@@ -127,9 +131,17 @@ export default function ApiKeyConfig({
         model,
       })
 
+      // Show success message
+      setSuccess('API settings saved successfully!')
       setError(null)
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSuccess(null)
+      }, 3000)
     } catch (err) {
       setError(`Failed to save API key: ${err}`)
+      setSuccess(null)
     }
   }
 
@@ -254,6 +266,12 @@ export default function ApiKeyConfig({
         >
           Save API Settings
         </button>
+        
+        {success && (
+          <div className='mt-3 text-center text-blue-600 text-sm font-medium'>
+            {success}
+          </div>
+        )}
       </form>
     </div>
   )
