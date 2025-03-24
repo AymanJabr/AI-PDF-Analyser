@@ -81,56 +81,58 @@ async function fetchOpenAIModels(apiKey: string): Promise<ModelInfo[]> {
 
     // Define interface for OpenAI API response
     interface OpenAIModel {
-      id: string;
-      object: string;
-      created: number;
-      owned_by: string;
+      id: string
+      object: string
+      created: number
+      owned_by: string
     }
-    
+
     interface OpenAIModelsResponse {
-      data: OpenAIModel[];
-      object: string;
+      data: OpenAIModel[]
+      object: string
     }
-    
-    const responseData = data as OpenAIModelsResponse;
-    
+
+    const responseData = data as OpenAIModelsResponse
+
     // Filter to include only text-based chat models appropriate for PDF analysis
     const chatModels = responseData.data
       .filter((model) => {
-        const modelId = model.id.toLowerCase();
-        
+        const modelId = model.id.toLowerCase()
+
         // Include base GPT models that support chat
-        const isGptModel = modelId.includes('gpt');
-        
+        const isGptModel = modelId.includes('gpt')
+
         // Exclude models not suitable for PDF text analysis
-        const isExcluded = 
+        const isExcluded =
           modelId.includes('instruct') || // Older instruction models
           modelId.includes('embedding') || // Embedding models
-          modelId.includes('-if-') ||     // Instruction-following variants
-          modelId.includes('vision') ||   // Vision models
-          modelId.includes('audio') ||    // Audio models
-          modelId.includes('whisper') ||  // Speech-to-text models
-          modelId.includes('dalle') ||    // Image generation models
-          modelId.includes('tts');        // Text-to-speech models
-          
-        return isGptModel && !isExcluded;
+          modelId.includes('-if-') || // Instruction-following variants
+          modelId.includes('vision') || // Vision models
+          modelId.includes('audio') || // Audio models
+          modelId.includes('whisper') || // Speech-to-text models
+          modelId.includes('dalle') || // Image generation models
+          modelId.includes('tts') // Text-to-speech models
+
+        return isGptModel && !isExcluded
       })
-      .map((model): ModelInfo => ({
-        id: model.id,
-        name: model.id,
-      }))
+      .map(
+        (model): ModelInfo => ({
+          id: model.id,
+          name: model.id,
+        })
+      )
       // Sort newest to oldest
       .sort((a, b) => {
         // Sort GPT-4 models first, then GPT-3.5, then others
-        if (a.id.includes('gpt-4') && !b.id.includes('gpt-4')) return -1;
-        if (!a.id.includes('gpt-4') && b.id.includes('gpt-4')) return 1;
-        return b.id.localeCompare(a.id);
-      });
+        if (a.id.includes('gpt-4') && !b.id.includes('gpt-4')) return -1
+        if (!a.id.includes('gpt-4') && b.id.includes('gpt-4')) return 1
+        return b.id.localeCompare(a.id)
+      })
 
-    return chatModels.length > 0 ? chatModels : DEFAULT_MODELS.openai;
+    return chatModels.length > 0 ? chatModels : DEFAULT_MODELS.openai
   } catch (error) {
-    console.error('Error fetching OpenAI models:', error);
-    return DEFAULT_MODELS.openai;
+    console.error('Error fetching OpenAI models:', error)
+    return DEFAULT_MODELS.openai
   }
 }
 
@@ -144,10 +146,10 @@ async function fetchAnthropicModels(apiKey: string): Promise<ModelInfo[]> {
       { id: 'claude-3-opus-20240229', name: 'claude-3-opus-20240229' },
       { id: 'claude-3-sonnet-20240229', name: 'claude-3-sonnet-20240229' },
       { id: 'claude-3-haiku-20240307', name: 'claude-3-haiku-20240307' },
-      
+
       // Keep some older models for backwards compatibility
       { id: 'claude-2.1', name: 'claude-2.1' },
-      
+
       // Removing claude-2.0 and claude-instant as they're less capable
       // for complex document analysis and likely to be deprecated
     ]
@@ -178,4 +180,3 @@ async function fetchAnthropicModels(apiKey: string): Promise<ModelInfo[]> {
     return DEFAULT_MODELS.anthropic
   }
 }
-

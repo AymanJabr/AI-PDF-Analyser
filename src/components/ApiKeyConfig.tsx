@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { ApiKeyConfig as ApiKeyConfigType, ModelInfo } from '@/types'
 import { storeApiKey, getApiKey } from '@/lib/utils'
 import { KeyRound, Eye, EyeOff, Loader2 } from 'lucide-react'
@@ -20,6 +20,43 @@ export default function ApiKeyConfig({
   const [isLoadingModels, setIsLoadingModels] = useState(false)
   const [models, setModels] = useState<ModelInfo[]>([])
 
+  // Fetch models when provider or API key changes
+  const fetchModels = useCallback(
+    async (providerName: 'openai' | 'anthropic', key: string) => {
+      if (!key) return
+
+      setIsLoadingModels(true)
+      setError(null)
+
+      try {
+        const response = await fetch(
+          `/api/models?provider=${providerName}&apiKey=${encodeURIComponent(
+            key
+          )}`
+        )
+
+        if (!response.ok) {
+          throw new Error(`Error fetching models: ${response.status}`)
+        }
+
+        const data = await response.json()
+        setModels(data.models || [])
+
+        // Set default model if none is selected
+        if (!model && data.models && data.models.length > 0) {
+          setModel(data.models[0].id)
+        }
+      } catch (err) {
+        console.error('Error fetching models:', err)
+        setError('Failed to fetch available models')
+        setModels([])
+      } finally {
+        setIsLoadingModels(false)
+      }
+    },
+    [model]
+  )
+
   // Try to load saved API key on component mount
   useEffect(() => {
     const savedOpenAIKey = getApiKey('openai')
@@ -34,42 +71,7 @@ export default function ApiKeyConfig({
       setApiKey(savedAnthropicKey)
       fetchModels('anthropic', savedAnthropicKey)
     }
-  }, [])
-
-  // Fetch models when provider or API key changes
-  const fetchModels = async (
-    providerName: 'openai' | 'anthropic',
-    key: string
-  ) => {
-    if (!key) return
-
-    setIsLoadingModels(true)
-    setError(null)
-
-    try {
-      const response = await fetch(
-        `/api/models?provider=${providerName}&apiKey=${encodeURIComponent(key)}`
-      )
-
-      if (!response.ok) {
-        throw new Error(`Error fetching models: ${response.status}`)
-      }
-
-      const data = await response.json()
-      setModels(data.models || [])
-
-      // Set default model if none is selected
-      if (!model && data.models && data.models.length > 0) {
-        setModel(data.models[0].id)
-      }
-    } catch (err) {
-      console.error('Error fetching models:', err)
-      setError('Failed to fetch available models')
-      setModels([])
-    } finally {
-      setIsLoadingModels(false)
-    }
-  }
+  }, [fetchModels])
 
   // Handle provider change
   const handleProviderChange = (newProvider: 'openai' | 'anthropic') => {
