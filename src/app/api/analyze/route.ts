@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateId, formatDate } from '@/lib/utils'
 import { ProcessedDocument } from '@/types'
-import { documents } from '@/lib/documentStore'
+import { storeDocument, getDocument } from '@/lib/documentStore'
 import pdfParse from 'pdf-parse/lib/pdf-parse.js'
 
 export async function POST(req: NextRequest) {
@@ -95,8 +95,10 @@ export async function POST(req: NextRequest) {
       dateUploaded: formatDate(new Date()),
     }
 
-    // Store document
-    documents[documentId] = document
+    // Store document using the helper function
+    storeDocument(document)
+
+    console.log(`Document processed and stored with ID: ${documentId}`)
 
     return NextResponse.json({ documentId })
   } catch (error) {
@@ -119,7 +121,7 @@ export async function GET(req: NextRequest) {
     )
   }
 
-  const document = documents[documentId]
+  const document = getDocument(documentId)
 
   if (!document) {
     return NextResponse.json({ error: 'Document not found' }, { status: 404 })

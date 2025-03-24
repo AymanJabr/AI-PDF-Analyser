@@ -6,7 +6,7 @@ import { MemoryVectorStore } from 'langchain/vectorstores/memory'
 import { Document } from 'langchain/document'
 import { DocumentReference } from '@/types'
 import { FakeEmbeddings } from 'langchain/embeddings/fake'
-import { documents } from '@/lib/documentStore'
+import { getDocument } from '@/lib/documentStore'
 
 // OpenAI default model
 const DEFAULT_OPENAI_MODEL = 'gpt-3.5-turbo'
@@ -20,6 +20,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { documentId, message, apiKeyConfig } = body
 
+    console.log(`Chat API received request for document ID: ${documentId}`)
+
     if (!documentId || !message || !apiKeyConfig) {
       return NextResponse.json(
         {
@@ -29,11 +31,16 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const document = documents[documentId]
+    const document = getDocument(documentId)
 
     if (!document) {
+      console.error(`Document with ID ${documentId} not found in chat API`)
       return NextResponse.json({ error: 'Document not found' }, { status: 404 })
     }
+
+    console.log(
+      `Document found: ${document.name}, pages: ${document.pageCount}`
+    )
 
     // Set up model based on provider and selected model
     let model

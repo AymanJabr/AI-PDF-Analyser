@@ -39,6 +39,8 @@ export default function ChatInterface({
     setIsLoading(true)
 
     try {
+      console.log(`Sending chat request for document ID: ${documentId}`)
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -55,9 +57,15 @@ export default function ChatInterface({
       if (!response.ok) {
         const errorData = await response.json().catch(() => null)
         console.error('API error:', response.status, errorData)
-        throw new Error(
-          `Failed to get response: ${response.status} ${response.statusText}`
-        )
+
+        let errorMessage = `Error: ${response.status} ${response.statusText}`
+
+        if (response.status === 404) {
+          errorMessage =
+            'Document not found. This might be due to the server restarting. Please try uploading your document again.'
+        }
+
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
@@ -76,7 +84,9 @@ export default function ChatInterface({
         ...prev,
         {
           role: 'assistant',
-          content: `Sorry, I encountered an error while processing your request. Please try again. error: ${error}`,
+          content: `Sorry, I encountered an error while processing your request: ${
+            error instanceof Error ? error.message : String(error)
+          }. Please try again or upload your document again if the problem persists.`,
         },
       ])
     } finally {

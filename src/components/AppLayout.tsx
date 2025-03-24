@@ -14,23 +14,38 @@ export default function AppLayout() {
   const [activeTab, setActiveTab] = useState('upload')
   const [documentId, setDocumentId] = useState<string | null>(null)
   const [document, setDocument] = useState<ProcessedDocument | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [apiKeyConfig, setApiKeyConfig] = useState<ApiKeyConfigType | null>(
     null
   )
 
   const handleDocumentProcessed = async (docId: string) => {
     setDocumentId(docId)
+    setError(null)
 
     // Fetch document details
     try {
+      console.log(`Fetching document with ID: ${docId}`)
       const res = await fetch(`/api/analyze?documentId=${docId}`)
-      if (res.ok) {
-        const docData = await res.json()
-        setDocument(docData)
-        setActiveTab('chat')
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}))
+        console.error('Error fetching document:', res.status, errorData)
+        setError(`Error loading document: ${errorData.error || res.statusText}`)
+        return
       }
+
+      const docData = await res.json()
+      console.log(`Document fetched successfully: ${docData.name}`)
+      setDocument(docData)
+      setActiveTab('chat')
     } catch (error) {
       console.error('Error fetching document:', error)
+      setError(
+        `Failed to load document: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      )
     }
   }
 
@@ -103,7 +118,17 @@ export default function AppLayout() {
               </TabsContent>
 
               <TabsContent value='chat' className='w-full'>
-                {document && apiKeyConfig ? (
+                {error ? (
+                  <div className='py-10 text-center'>
+                    <p className='text-red-500'>{error}</p>
+                    <button
+                      onClick={() => setActiveTab('upload')}
+                      className='mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600'
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                ) : document && apiKeyConfig ? (
                   <div className='flex flex-col lg:flex-row gap-4 h-[70vh] w-full'>
                     <div className='w-full lg:w-1/2 h-[30vh] lg:h-full'>
                       <DocumentPreview document={document} />
