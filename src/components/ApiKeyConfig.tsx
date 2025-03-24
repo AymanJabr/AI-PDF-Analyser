@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ApiKeyConfig as ApiKeyConfigType } from '@/types'
+import { ApiKeyConfig as ApiKeyConfigType, ModelInfo } from '@/types'
 import { storeApiKey, getApiKey } from '@/lib/utils'
-import { KeyRound, Eye, EyeOff } from 'lucide-react'
+import { KeyRound, Eye, EyeOff, Loader2 } from 'lucide-react'
 
 interface ApiKeyConfigProps {
   onApiKeyConfigured: (config: ApiKeyConfigType) => void
@@ -14,8 +14,11 @@ export default function ApiKeyConfig({
 }: ApiKeyConfigProps) {
   const [provider, setProvider] = useState<'openai' | 'anthropic'>('openai')
   const [apiKey, setApiKey] = useState('')
+  const [model, setModel] = useState<string>('')
   const [showApiKey, setShowApiKey] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isLoadingModels, setIsLoadingModels] = useState(false)
+  const [models, setModels] = useState<ModelInfo[]>([])
 
   // Try to load saved API key on component mount
   useEffect(() => {
@@ -25,17 +28,89 @@ export default function ApiKeyConfig({
     if (savedOpenAIKey) {
       setProvider('openai')
       setApiKey(savedOpenAIKey)
+      fetchModels('openai', savedOpenAIKey)
     } else if (savedAnthropicKey) {
       setProvider('anthropic')
       setApiKey(savedAnthropicKey)
+      fetchModels('anthropic', savedAnthropicKey)
     }
   }, [])
+
+  // Fetch models when provider or API key changes
+  const fetchModels = async (
+    providerName: 'openai' | 'anthropic',
+    key: string
+  ) => {
+    if (!key) return
+
+    setIsLoadingModels(true)
+    setError(null)
+
+    try {
+      const response = await fetch(
+        `/api/models?provider=${providerName}&apiKey=${encodeURIComponent(key)}`
+      )
+
+      if (!response.ok) {
+        throw new Error(`Error fetching models: ${response.status}`)
+      }
+
+      const data = await response.json()
+      setModels(data.models || [])
+
+      // Set default model if none is selected
+      if (!model && data.models && data.models.length > 0) {
+        setModel(data.models[0].id)
+      }
+    } catch (err) {
+      console.error('Error fetching models:', err)
+      setError('Failed to fetch available models')
+      setModels([])
+    } finally {
+      setIsLoadingModels(false)
+    }
+  }
+
+  // Handle provider change
+  const handleProviderChange = (newProvider: 'openai' | 'anthropic') => {
+    setProvider(newProvider)
+    setModel('') // Reset model when changing provider
+
+    // If API key is set, fetch models for new provider
+    if (apiKey) {
+      fetchModels(newProvider, apiKey)
+    }
+  }
+
+  // Handle API key change
+  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newApiKey = e.target.value
+    setApiKey(newApiKey)
+
+    // Clear models when API key is cleared
+    if (!newApiKey) {
+      setModels([])
+      setModel('')
+    }
+  }
+
+  // Handle API key blur - fetch models when user completes entering API key
+  const handleApiKeyBlur = () => {
+    if (apiKey) {
+      fetchModels(provider, apiKey)
+    }
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!apiKey) {
       setError('Please enter your API key')
+      return
+    }
+
+    if (!model) {
+      setError('Please select a model')
       return
     }
 
@@ -47,6 +122,7 @@ export default function ApiKeyConfig({
       onApiKeyConfigured({
         provider,
         apiKey,
+        model,
       })
 
       setError(null)
@@ -73,7 +149,7 @@ export default function ApiKeyConfig({
                 type='radio'
                 value='openai'
                 checked={provider === 'openai'}
-                onChange={() => setProvider('openai')}
+                onChange={() => handleProviderChange('openai')}
                 className='h-4 w-4 text-blue-600 focus:ring-blue-500'
               />
               <span className='ml-2 text-sm text-gray-700'>OpenAI</span>
@@ -83,7 +159,7 @@ export default function ApiKeyConfig({
                 type='radio'
                 value='anthropic'
                 checked={provider === 'anthropic'}
-                onChange={() => setProvider('anthropic')}
+                onChange={() => handleProviderChange('anthropic')}
                 className='h-4 w-4 text-blue-600 focus:ring-blue-500'
               />
               <span className='ml-2 text-sm text-gray-700'>Anthropic</span>
@@ -103,7 +179,8 @@ export default function ApiKeyConfig({
               id='apiKey'
               type={showApiKey ? 'text' : 'password'}
               value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
+              onChange={handleApiKeyChange}
+              onBlur={handleApiKeyBlur}
               placeholder='Enter your API key'
               className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm'
             />
@@ -121,13 +198,59 @@ export default function ApiKeyConfig({
           </div>
         </div>
 
+        <div>
+          <label
+            htmlFor='model'
+            className='block text-sm font-medium text-gray-700 mb-1'
+          >
+            Model
+          </label>
+          <div className='relative'>
+            <select
+              id='model'
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              disabled={isLoadingModels || models.length === 0}
+              className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm appearance-none'
+            >
+              {models.length === 0 ? (
+                <option value=''>
+                  {isLoadingModels
+                    ? 'Loading models...'
+                    : 'Enter API key to see models'}
+                </option>
+              ) : (
+                <>
+                  <option value=''>Select a model</option>
+                  {models.map((modelInfo) => (
+                    <option key={modelInfo.id} value={modelInfo.id}>
+                      {modelInfo.name}
+                    </option>
+                  ))}
+                </>
+              )}
+            </select>
+            {isLoadingModels && (
+              <div className='absolute inset-y-0 right-0 pr-3 flex items-center'>
+                <Loader2 className='h-4 w-4 animate-spin text-gray-400' />
+              </div>
+            )}
+          </div>
+          <p className='mt-1 text-xs text-gray-500'>
+            {provider === 'openai'
+              ? 'GPT-4 models are more capable but may be slower and more expensive.'
+              : 'Claude 3 Opus is the most capable model, while Haiku is faster and more affordable.'}
+          </p>
+        </div>
+
         {error && <div className='text-red-500 text-sm'>{error}</div>}
 
         <button
           type='submit'
-          className='w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+          disabled={!apiKey || !model || isLoadingModels}
+          className='w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50'
         >
-          Save API Key
+          Save API Settings
         </button>
       </form>
     </div>

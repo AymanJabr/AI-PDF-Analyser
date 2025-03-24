@@ -8,6 +8,11 @@ import { DocumentReference } from '@/types'
 import { FakeEmbeddings } from 'langchain/embeddings/fake'
 import { documents } from '@/lib/documentStore'
 
+// OpenAI default model
+const DEFAULT_OPENAI_MODEL = 'gpt-3.5-turbo'
+// Anthropic default model
+const DEFAULT_ANTHROPIC_MODEL = 'claude-3-sonnet-20240229'
+
 // Define both handler methods explicitly with named exports
 export async function POST(req: NextRequest) {
   try {
@@ -30,18 +35,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Document not found' }, { status: 404 })
     }
 
-    // Set up model based on provider
+    // Set up model based on provider and selected model
     let model
     if (apiKeyConfig.provider === 'openai') {
+      const modelName = apiKeyConfig.model || DEFAULT_OPENAI_MODEL
       model = new ChatOpenAI({
         apiKey: apiKeyConfig.apiKey,
-        modelName: 'gpt-3.5-turbo',
+        modelName: modelName,
         temperature: 0,
       })
     } else {
+      const modelName = apiKeyConfig.model || DEFAULT_ANTHROPIC_MODEL
       model = new ChatAnthropic({
         apiKey: apiKeyConfig.apiKey,
-        modelName: 'claude-3-sonnet-20240229',
+        modelName: modelName,
         temperature: 0,
       })
     }

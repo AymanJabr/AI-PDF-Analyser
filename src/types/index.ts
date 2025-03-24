@@ -1,6 +1,12 @@
 export interface ApiKeyConfig {
   provider: 'openai' | 'anthropic'
   apiKey: string
+  model?: string // The selected model ID
+}
+
+export interface ModelInfo {
+  id: string
+  name: string
 }
 
 export interface DocumentReference {
