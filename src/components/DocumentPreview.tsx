@@ -1,14 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronLeft, ChevronRight, FileText } from 'lucide-react'
+import { ChevronLeft, ChevronRight, FileText, X } from 'lucide-react'
 import { ProcessedDocument } from '@/types'
 
 interface DocumentPreviewProps {
   document: ProcessedDocument
+  onClear?: () => void
 }
 
-export default function DocumentPreview({ document }: DocumentPreviewProps) {
+export default function DocumentPreview({ document, onClear }: DocumentPreviewProps) {
   const [currentPage, setCurrentPage] = useState(0)
 
   const handlePreviousPage = () => {
@@ -36,8 +37,19 @@ export default function DocumentPreview({ document }: DocumentPreviewProps) {
             {document.name}
           </h3>
         </div>
-        <div className='flex items-center text-xs sm:text-sm text-gray-700'>
-          Page {currentPage + 1} of {document.pageCount}
+        <div className='flex items-center'>
+          <div className='text-xs sm:text-sm text-gray-700 mr-2'>
+            Page {currentPage + 1} of {document.pageCount}
+          </div>
+          {onClear && (
+            <button
+              onClick={onClear}
+              className='flex items-center p-1 rounded-md hover:bg-gray-200 text-gray-700'
+              title='Clear document'
+            >
+              <X className='h-4 w-4 sm:h-5 sm:w-5' />
+            </button>
+          )}
         </div>
       </div>
 

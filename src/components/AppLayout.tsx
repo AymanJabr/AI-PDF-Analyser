@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { FileText, Settings } from 'lucide-react'
+import { FileText, Settings, X } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs'
 import DocumentUploader from './DocumentUploader'
 import ApiKeyConfig from './ApiKeyConfig'
@@ -49,6 +49,13 @@ export default function AppLayout() {
     }
   }
 
+  const handleClearDocument = () => {
+    setDocumentId(null)
+    setDocument(null)
+    setError(null)
+    setActiveTab('upload')
+  }
+
   const handleApiKeyConfigured = (config: ApiKeyConfigType) => {
     setApiKeyConfig(config)
     if (documentId) {
@@ -65,6 +72,15 @@ export default function AppLayout() {
               <Logo width={32} height={32} className='mr-2' />
               <h1 className='text-xl font-bold text-gray-800'>PDF Analyzer</h1>
             </div>
+            {document && (
+              <button
+                onClick={handleClearDocument}
+                className='flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors'
+              >
+                <X className='h-4 w-4 mr-1' />
+                Clear Document
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -131,7 +147,10 @@ export default function AppLayout() {
                 ) : document && apiKeyConfig ? (
                   <div className='flex flex-col lg:flex-row gap-4 h-[70vh] w-full'>
                     <div className='w-full lg:w-1/2 h-[30vh] lg:h-full'>
-                      <DocumentPreview document={document} />
+                      <DocumentPreview 
+                        document={document} 
+                        onClear={handleClearDocument}
+                      />
                     </div>
                     <div className='w-full lg:w-1/2 h-[40vh] lg:h-full border rounded-lg overflow-hidden bg-white'>
                       <ChatInterface
