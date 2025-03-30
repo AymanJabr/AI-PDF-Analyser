@@ -136,9 +136,9 @@ export default function ChatInterface({
     <div className='flex flex-col h-full'>
       <div className='flex-1 overflow-y-auto p-2 sm:p-4 space-y-3'>
         {messages.length === 0 ? (
-          <div className='flex items-center justify-center h-full text-gray-500'>
+          <div className='flex items-center justify-center h-full text-gray-700'>
             <div className='text-center'>
-              <FileText className='h-8 w-8 mx-auto mb-2 text-gray-400' />
+              <FileText className='h-8 w-8 mx-auto mb-2 text-gray-600' />
               <p className='text-sm'>Ask a question about the document</p>
             </div>
           </div>
@@ -148,8 +148,8 @@ export default function ChatInterface({
         {isLoading && (
           <div className='flex justify-start mb-3'>
             <div className='bg-gray-100 rounded-lg px-3 py-2 flex items-center space-x-2'>
-              <Loader2 className='h-4 w-4 animate-spin text-gray-500' />
-              <span className='text-gray-500 text-xs sm:text-sm'>
+              <Loader2 className='h-4 w-4 animate-spin text-gray-700' />
+              <span className='text-gray-700 text-xs sm:text-sm'>
                 Thinking...
               </span>
             </div>
@@ -165,13 +165,13 @@ export default function ChatInterface({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder='Ask a question about the document...'
-            className='flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500'
+            className='flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder:text-gray-600 text-gray-900'
             disabled={isLoading}
           />
           <button
             type='submit'
             disabled={isLoading || !input.trim()}
-            className='bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50'
+            className='bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-70'
           >
             {isLoading ? (
               <Loader2 className='h-4 w-4 sm:h-5 sm:w-5 animate-spin' />

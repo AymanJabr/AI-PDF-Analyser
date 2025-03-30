@@ -79,7 +79,7 @@ export default function AppLayout() {
             <TabsList className='w-full flex flex-wrap'>
               <TabsTrigger
                 value='upload'
-                className='flex-1 flex items-center justify-center min-w-[120px]'
+                className='flex-1 flex items-center justify-center min-w-[120px] disabled:text-gray-600'
                 disabled={false}
               >
                 <FileText className='h-4 w-4 mr-2' />
@@ -88,7 +88,7 @@ export default function AppLayout() {
 
               <TabsTrigger
                 value='chat'
-                className='flex-1 flex items-center justify-center min-w-[120px]'
+                className='flex-1 flex items-center justify-center min-w-[120px] disabled:text-gray-600'
                 disabled={!documentId || !apiKeyConfig}
               >
                 <Logo width={16} height={16} className='mr-2' />
@@ -97,7 +97,7 @@ export default function AppLayout() {
 
               <TabsTrigger
                 value='settings'
-                className='flex-1 flex items-center justify-center min-w-[120px]'
+                className='flex-1 flex items-center justify-center min-w-[120px] disabled:text-gray-600'
                 disabled={false}
               >
                 <Settings className='h-4 w-4 mr-2' />
@@ -108,7 +108,7 @@ export default function AppLayout() {
             <div className='bg-white p-4 sm:p-6 rounded-lg shadow'>
               <TabsContent value='upload'>
                 <div className='max-w-3xl mx-auto py-4'>
-                  <h2 className='text-lg font-medium mb-4 text-center'>
+                  <h2 className='text-lg font-medium mb-4 text-center text-gray-900'>
                     Upload a PDF Document
                   </h2>
                   <DocumentUploader
@@ -142,7 +142,7 @@ export default function AppLayout() {
                   </div>
                 ) : (
                   <div className='py-10 text-center'>
-                    <p className='text-gray-500'>
+                    <p className='text-gray-700'>
                       {!document
                         ? 'Please upload a document first'
                         : 'Please configure your API settings'}
@@ -153,7 +153,7 @@ export default function AppLayout() {
 
               <TabsContent value='settings'>
                 <div className='max-w-3xl mx-auto py-4'>
-                  <h2 className='text-lg font-medium mb-4 text-center'>
+                  <h2 className='text-lg font-medium mb-4 text-center text-gray-900'>
                     API Configuration
                   </h2>
                   <ApiKeyConfig onApiKeyConfigured={handleApiKeyConfigured} />
@@ -166,7 +166,7 @@ export default function AppLayout() {
 
       <footer className='bg-white border-t py-4 mt-auto'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <p className='text-center text-sm text-gray-500'>
+          <p className='text-center text-sm text-gray-700'>
             PDF Analyzer - AI-powered document analysis
           </p>
         </div>

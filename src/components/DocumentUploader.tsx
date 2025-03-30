@@ -76,7 +76,7 @@ export default function DocumentUploader({
           isDragActive
             ? 'border-blue-400 bg-blue-50'
             : 'border-gray-300 hover:border-gray-400',
-          isUploading && 'pointer-events-none opacity-60'
+          isUploading && 'pointer-events-none opacity-80'
         )}
       >
         <input {...getInputProps()} />
@@ -85,20 +85,20 @@ export default function DocumentUploader({
           {isUploading ? (
             <>
               <Loader2 className='h-10 w-10 text-blue-500 animate-spin' />
-              <p className='text-sm text-gray-500'>
+              <p className='text-sm text-gray-700'>
                 Processing your document...
               </p>
             </>
           ) : (
             <>
-              <FileUp className='h-10 w-10 text-gray-400' />
+              <FileUp className='h-10 w-10 text-gray-600' />
               <div>
-                <p className='text-base font-medium'>
+                <p className='text-base font-medium text-gray-800'>
                   {isDragActive
                     ? 'Drop your PDF here'
                     : 'Drag & drop your PDF here'}
                 </p>
-                <p className='text-sm text-gray-500 mt-1'>
+                <p className='text-sm text-gray-700 mt-1'>
                   or click to browse files
                 </p>
               </div>

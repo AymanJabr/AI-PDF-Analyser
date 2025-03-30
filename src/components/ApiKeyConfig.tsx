@@ -148,13 +148,13 @@ export default function ApiKeyConfig({
   return (
     <div className='w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-sm border border-gray-200'>
       <div className='flex items-center mb-4'>
-        <KeyRound className='h-5 w-5 text-gray-500 mr-2' />
-        <h2 className='text-lg font-medium'>Configure API Key</h2>
+        <KeyRound className='h-5 w-5 text-gray-700 mr-2' />
+        <h2 className='text-lg font-medium text-gray-900'>Configure API Key</h2>
       </div>
 
       <form onSubmit={handleSubmit} className='space-y-4'>
         <div>
-          <label className='block text-sm font-medium text-gray-700 mb-1'>
+          <label className='block text-sm font-medium text-gray-900 mb-1'>
             AI Provider
           </label>
           <div className='flex space-x-4'>
@@ -166,7 +166,7 @@ export default function ApiKeyConfig({
                 onChange={() => handleProviderChange('openai')}
                 className='h-4 w-4 text-blue-600 focus:ring-blue-500'
               />
-              <span className='ml-2 text-sm text-gray-700'>OpenAI</span>
+              <span className='ml-2 text-sm text-gray-900'>OpenAI</span>
             </label>
             <label className='flex items-center'>
               <input
@@ -176,7 +176,7 @@ export default function ApiKeyConfig({
                 onChange={() => handleProviderChange('anthropic')}
                 className='h-4 w-4 text-blue-600 focus:ring-blue-500'
               />
-              <span className='ml-2 text-sm text-gray-700'>Anthropic</span>
+              <span className='ml-2 text-sm text-gray-900'>Anthropic</span>
             </label>
           </div>
         </div>
@@ -184,7 +184,7 @@ export default function ApiKeyConfig({
         <div className='relative'>
           <label
             htmlFor='apiKey'
-            className='block text-sm font-medium text-gray-700 mb-1'
+            className='block text-sm font-medium text-gray-900 mb-1'
           >
             API Key
           </label>
@@ -196,12 +196,12 @@ export default function ApiKeyConfig({
               onChange={handleApiKeyChange}
               onBlur={handleApiKeyBlur}
               placeholder='Enter your API key'
-              className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm'
+              className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm placeholder:text-gray-600 text-gray-900'
             />
             <button
               type='button'
               onClick={() => setShowApiKey(!showApiKey)}
-              className='absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600'
+              className='absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600 hover:text-gray-800'
             >
               {showApiKey ? (
                 <EyeOff className='h-4 w-4' />
@@ -215,7 +215,7 @@ export default function ApiKeyConfig({
         <div>
           <label
             htmlFor='model'
-            className='block text-sm font-medium text-gray-700 mb-1'
+            className='block text-sm font-medium text-gray-900 mb-1'
           >
             Model
           </label>
@@ -225,7 +225,7 @@ export default function ApiKeyConfig({
               value={model}
               onChange={(e) => setModel(e.target.value)}
               disabled={isLoadingModels || models.length === 0}
-              className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm appearance-none'
+              className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm appearance-none text-gray-900'
             >
               {models.length === 0 ? (
                 <option value=''>
@@ -246,11 +246,11 @@ export default function ApiKeyConfig({
             </select>
             {isLoadingModels && (
               <div className='absolute inset-y-0 right-0 pr-3 flex items-center'>
-                <Loader2 className='h-4 w-4 animate-spin text-gray-400' />
+                <Loader2 className='h-4 w-4 animate-spin text-gray-600' />
               </div>
             )}
           </div>
-          <p className='mt-1 text-xs text-gray-500'>
+          <p className='mt-1 text-xs text-gray-700'>
             {provider === 'openai'
               ? 'GPT-4 models are more capable but may be slower and more expensive.'
               : 'Claude 3 Opus is the most capable model, while Haiku is faster and more affordable.'}
@@ -262,7 +262,7 @@ export default function ApiKeyConfig({
         <button
           type='submit'
           disabled={!apiKey || !model || isLoadingModels}
-          className='w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50'
+          className='w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-70'
         >
           Save API Settings
         </button>
