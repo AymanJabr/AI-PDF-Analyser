@@ -2,19 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { generateId, formatDate } from '@/lib/utils'
 import { ProcessedDocument } from '@/types'
 import { storeDocument, getDocument } from '@/lib/documentStore'
-import * as pdfjsLib from 'pdfjs-dist'
+import { pdfjs } from 'react-pdf'
 
 // Initialize PDF.js worker
-if (typeof window === 'undefined') {
-  // Server-side initialization
-  pdfjsLib.GlobalWorkerOptions.workerSrc = '' // Empty string for server-side
-} else {
-  // Client-side initialization
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
-}
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
 
 export async function POST(req: NextRequest) {
-  let pdf: pdfjsLib.PDFDocumentProxy | null = null
+  let pdf: any = null
   
   try {
     const formData = await req.formData()
@@ -32,8 +26,8 @@ export async function POST(req: NextRequest) {
     // Read file as ArrayBuffer
     const arrayBuffer = await file.arrayBuffer()
     
-    // Load the PDF using pdfjs-dist
-    const loadingTask = pdfjsLib.getDocument(new Uint8Array(arrayBuffer))
+    // Load the PDF using react-pdf
+    const loadingTask = pdfjs.getDocument(new Uint8Array(arrayBuffer))
     pdf = await loadingTask.promise
     
     // Get total page count
@@ -55,7 +49,7 @@ export async function POST(req: NextRequest) {
         
         // Extract and join text items with spaces
         const pageText = textContent.items
-          .map((item) => 'str' in item ? item.str : '')
+          .map((item: { str?: string }) => 'str' in item ? item.str : '')
           .join(' ')
         
         pageContents.push(pageText)
