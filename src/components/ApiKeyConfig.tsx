@@ -134,7 +134,7 @@ export default function ApiKeyConfig({
       // Show success message
       setSuccess('API settings saved successfully!')
       setError(null)
-      
+
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccess(null)
@@ -266,7 +266,7 @@ export default function ApiKeyConfig({
         >
           Save API Settings
         </button>
-        
+
         {success && (
           <div className='mt-3 text-center text-blue-600 text-sm font-medium'>
             {success}

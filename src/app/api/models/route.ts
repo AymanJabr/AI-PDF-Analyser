@@ -111,7 +111,10 @@ async function fetchOpenAIModels(apiKey: string): Promise<ModelInfo[]> {
           modelId.includes('audio') || // Audio models
           modelId.includes('whisper') || // Speech-to-text models
           modelId.includes('dalle') || // Image generation models
-          modelId.includes('tts') // Text-to-speech models
+          modelId.includes('tts') || // Text-to-speech models
+          modelId.includes('transcribe') || // speech-to-text transcribtion
+          modelId.includes('realtime') || // streams of either text or audio
+          modelId.includes('search') // search models
 
         return isGptModel && !isExcluded
       })
@@ -128,6 +131,8 @@ async function fetchOpenAIModels(apiKey: string): Promise<ModelInfo[]> {
         if (!a.id.includes('gpt-4') && b.id.includes('gpt-4')) return 1
         return b.id.localeCompare(a.id)
       })
+
+    console.log('chatModels', chatModels)
 
     return chatModels.length > 0 ? chatModels : DEFAULT_MODELS.openai
   } catch (error) {

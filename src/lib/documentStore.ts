@@ -17,15 +17,35 @@ if (typeof global !== 'undefined') {
 
 // Function to store a document
 export function storeDocument(document: ProcessedDocument): void {
+  if (!document || !document.id) {
+    console.error('Attempted to store invalid document:', document)
+    return
+  }
+
+  if (!document.pageContents || document.pageContents.length === 0) {
+    console.error('Attempted to store document with no page contents:', document.id)
+    return
+  }
+
   // Store in memory (global scope for persistence between API calls)
   globalDocuments[document.id] = document
 
   console.log(`Document stored with ID: ${document.id}`)
+  console.log(`Document details:`, {
+    name: document.name,
+    pageCount: document.pageCount,
+    contentLength: document.pageContents.length,
+  })
   console.log(`Current documents in store:`, Object.keys(globalDocuments))
 }
 
 // Function to retrieve a document
 export function getDocument(id: string): ProcessedDocument | null {
+  if (!id) {
+    console.error('Attempted to get document with no ID')
+    return null
+  }
+
   const doc = globalDocuments[id]
 
   if (!doc) {
@@ -33,6 +53,11 @@ export function getDocument(id: string): ProcessedDocument | null {
       `Document with ID ${id} not found. Available IDs:`,
       Object.keys(globalDocuments)
     )
+    return null
+  }
+
+  if (!doc.pageContents || doc.pageContents.length === 0) {
+    console.error(`Document ${id} has no page contents`)
     return null
   }
 

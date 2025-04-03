@@ -38,8 +38,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Document not found' }, { status: 404 })
     }
 
+    if (!document.pageContents || document.pageContents.length === 0) {
+      console.error(`Document ${documentId} has no page contents`)
+      return NextResponse.json(
+        { error: 'Document has no content to analyze' },
+        { status: 400 }
+      )
+    }
+
     console.log(
-      `Document found: ${document.name}, pages: ${document.pageCount}`
+      `Document found: ${document.name}, pages: ${document.pageCount}, content length: ${document.pageContents.length}`
     )
 
     // Set up model based on provider and selected model
@@ -68,13 +76,33 @@ export async function POST(req: NextRequest) {
 
     // Split text into chunks with metadata for page reference
     const docs: Document[] = []
-    for (let i = 0; i < document.pageContents.length; i++) {
-      const pageContent = document.pageContents[i]
-      const chunks = await textSplitter.createDocuments(
-        [pageContent],
-        [{ pageNumber: i + 1 }]
+    try {
+      for (let i = 0; i < document.pageContents.length; i++) {
+        const pageContent = document.pageContents[i]
+        if (!pageContent) {
+          console.warn(`Empty page content found at index ${i}`)
+          continue
+        }
+        const chunks = await textSplitter.createDocuments(
+          [pageContent],
+          [{ pageNumber: i + 1 }]
+        )
+        docs.push(...chunks)
+      }
+
+      if (docs.length === 0) {
+        console.error('No valid document chunks were created')
+        return NextResponse.json(
+          { error: 'Failed to process document content' },
+          { status: 500 }
+        )
+      }
+    } catch (error) {
+      console.error('Error processing document chunks:', error)
+      return NextResponse.json(
+        { error: 'Failed to process document content' },
+        { status: 500 }
       )
-      docs.push(...chunks)
     }
 
     // Create a simple in-memory vector store with fake embeddings
@@ -127,8 +155,9 @@ export async function POST(req: NextRequest) {
     })
   } catch (error) {
     console.error('Error in chat processing:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(
-      { error: 'Failed to process chat request' },
+      { error: `Failed to process chat request: ${errorMessage}` },
       { status: 500 }
     )
   }
