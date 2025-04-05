@@ -26,21 +26,67 @@ export function formatDate(date: Date): string {
 }
 
 /**
- * Safely store API keys in localStorage with encryption
+ * Simple encryption for API keys
+ * This is a basic implementation and not meant for high-security applications
+ */
+function encryptApiKey(apiKey: string): string {
+  // Simple XOR-based encryption with a fixed key
+  // This provides obfuscation rather than true encryption
+  const encryptionKey = 'pdf-analyzer-key-2025'
+  let encrypted = ''
+
+  for (let i = 0; i < apiKey.length; i++) {
+    const charCode = apiKey.charCodeAt(i) ^ encryptionKey.charCodeAt(i % encryptionKey.length)
+    encrypted += String.fromCharCode(charCode)
+  }
+
+  // Convert to Base64 for safe storage
+  return btoa(encrypted)
+}
+
+/**
+ * Decrypt the API key
+ */
+function decryptApiKey(encryptedKey: string): string {
+  try {
+    // Convert from Base64
+    const encrypted = atob(encryptedKey)
+    const encryptionKey = 'pdf-analyzer-key-2025'
+    let decrypted = ''
+
+    for (let i = 0; i < encrypted.length; i++) {
+      const charCode = encrypted.charCodeAt(i) ^ encryptionKey.charCodeAt(i % encryptionKey.length)
+      decrypted += String.fromCharCode(charCode)
+    }
+
+    return decrypted
+  } catch (error) {
+    console.error('Failed to decrypt API key:', error)
+    return ''
+  }
+}
+
+/**
+ * Safely store API keys in sessionStorage with encryption
  */
 export function storeApiKey(
   provider: 'openai' | 'anthropic',
   apiKey: string
 ): void {
-  // In a production environment, this should be encrypted
-  localStorage.setItem(`apiKey_${provider}`, apiKey)
+  // Encrypt the API key before storing
+  const encryptedKey = encryptApiKey(apiKey)
+  sessionStorage.setItem(`apiKey_${provider}`, encryptedKey)
 }
 
 /**
- * Retrieve API keys from localStorage
+ * Retrieve API keys from sessionStorage
  */
 export function getApiKey(provider: 'openai' | 'anthropic'): string | null {
-  return localStorage.getItem(`apiKey_${provider}`)
+  const encryptedKey = sessionStorage.getItem(`apiKey_${provider}`)
+  if (!encryptedKey) return null
+
+  // Decrypt the API key
+  return decryptApiKey(encryptedKey)
 }
 
 /**

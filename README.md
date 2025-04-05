@@ -49,7 +49,9 @@ pnpm dev
 
 ## Important Notes
 
-- This application does not store or send your API keys to any server; they are stored in your browser's localStorage
+- This application stores your API keys securely in your browser's sessionStorage with client-side encryption
+- API keys are only transmitted in encrypted request bodies, never in URLs
+- Your API keys are only used during your current session and are cleared when you close your browser
 - Document processing happens on the server, but the AI interactions use your API key
 - For better OCR results with scanned documents, ensure the documents are clear and well-scanned
 

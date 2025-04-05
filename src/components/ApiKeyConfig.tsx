@@ -32,11 +32,17 @@ export default function ApiKeyConfig({
       setModels([])
 
       try {
-        const response = await fetch(
-          `/api/models?provider=${providerName}&apiKey=${encodeURIComponent(
-            key
-          )}`
-        )
+        // Use POST method instead of GET to avoid API keys in URL
+        const response = await fetch('/api/models', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            provider: providerName,
+            apiKey: key,
+          }),
+        })
 
         const data = await response.json()
 

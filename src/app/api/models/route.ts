@@ -1,28 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ModelInfo } from '@/types'
 
-export async function GET(req: NextRequest) {
-  const url = new URL(req.url)
-  const provider = url.searchParams.get('provider') as
-    | 'openai'
-    | 'anthropic'
-    | null
-  const apiKey = url.searchParams.get('apiKey')
+// Add POST endpoint for fetching models
+export async function POST(req: NextRequest) {
+    const { provider, apiKey } = await req.json()
 
-  if (!provider) {
-    return NextResponse.json(
-      { error: 'Provider parameter is required (openai or anthropic)' },
-      { status: 400 }
-    )
-  }
+    if (!provider) {
+      return NextResponse.json(
+        { error: 'Provider parameter is required (openai or anthropic)' },
+        { status: 400 }
+      )
+    }
 
-  // If no API key, return empty models array
-  if (!apiKey) {
-    return NextResponse.json({
-      models: [],
-      error: 'API key is required to fetch available models'
-    })
-  }
+    // If no API key, return empty models array
+    if (!apiKey) {
+      return NextResponse.json({
+        models: [],
+        error: 'API key is required to fetch available models'
+      })
+    }
 
   try {
     let models
