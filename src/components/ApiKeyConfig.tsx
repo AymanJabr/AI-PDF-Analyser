@@ -29,6 +29,7 @@ export default function ApiKeyConfig({
       setIsLoadingModels(true)
       setError(null)
       setSuccess(null)
+      setModels([])
 
       try {
         const response = await fetch(
@@ -37,26 +38,34 @@ export default function ApiKeyConfig({
           )}`
         )
 
+        const data = await response.json()
+
         if (!response.ok) {
-          throw new Error(`Error fetching models: ${response.status}`)
+          throw new Error(data.error || `Error fetching models: ${response.status}`)
         }
 
-        const data = await response.json()
+        if (data.error) {
+          throw new Error(data.error)
+        }
+
         setModels(data.models || [])
 
-        // Set default model if none is selected or if provider changed
+        // Set default model if models array is not empty
         if (data.models && data.models.length > 0) {
           setModel(data.models[0].id)
+        } else {
+          throw new Error('No models available for your account')
         }
       } catch (err) {
         console.error('Error fetching models:', err)
-        setError('Failed to fetch available models')
+        setError(err instanceof Error ? err.message : String(err))
         setModels([])
+        setModel('')
       } finally {
         setIsLoadingModels(false)
       }
     },
-    [] // Remove model from dependency array to avoid circular dependencies
+    []
   )
 
   // Try to load saved API key on component mount
@@ -263,7 +272,11 @@ export default function ApiKeyConfig({
           </p>
         </div>
 
-        {error && <div className='text-red-500 text-sm'>{error}</div>}
+        {error && (
+          <div className='mt-2 text-sm text-red-600 bg-red-50 p-2 rounded border border-red-200'>
+            {error}
+          </div>
+        )}
 
         <button
           type='submit'
