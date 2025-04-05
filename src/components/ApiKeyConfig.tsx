@@ -166,6 +166,26 @@ export default function ApiKeyConfig({
     }
   }
 
+  const handleClearApiKeys = () => {
+    // Clear from session storage
+    sessionStorage.removeItem(`apiKey_openai`)
+    sessionStorage.removeItem(`apiKey_anthropic`)
+
+    // Reset state
+    setApiKey('')
+    setModel('')
+    setModels([])
+
+    // Show success message
+    setSuccess('API keys cleared successfully')
+    setError(null)
+
+    // Clear success message after 3 seconds
+    setTimeout(() => {
+      setSuccess(null)
+    }, 3000)
+  }
+
   return (
     <div className='w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-sm border border-gray-200'>
       <div className='flex items-center mb-4'>
@@ -231,6 +251,33 @@ export default function ApiKeyConfig({
               )}
             </button>
           </div>
+          <div className="mt-1 text-xs text-gray-600">
+            {provider === 'openai' ? (
+              <span>
+                Get your OpenAI API key from{' '}
+                <a
+                  href="https://platform.openai.com/api-keys"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  OpenAI Platform
+                </a>
+              </span>
+            ) : (
+              <span>
+                Get your Anthropic API key from{' '}
+                <a
+                  href="https://console.anthropic.com/settings/keys"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  Anthropic Console
+                </a>
+              </span>
+            )}
+          </div>
         </div>
 
         <div>
@@ -292,11 +339,31 @@ export default function ApiKeyConfig({
           Save API Settings
         </button>
 
-        {success && (
+        {success && success === 'API settings saved successfully!' && (
           <div className='mt-3 text-center text-blue-600 text-sm font-medium'>
             {success}
           </div>
         )}
+
+        <div className='pt-2 border-t border-gray-200 mt-4'>
+          <div className='flex flex-col items-center'>
+            <p className='text-xs text-gray-500 mb-2'>
+              API keys are automatically cleared when page is closed
+            </p>
+            <button
+              type='button'
+              onClick={handleClearApiKeys}
+              className='text-sm text-gray-600 hover:text-red-600 focus:outline-none'
+            >
+              Clear Saved API Keys
+            </button>
+            {success && success === 'API keys cleared successfully' && (
+              <div className='mt-2 text-center text-blue-600 text-sm font-medium'>
+                {success}
+              </div>
+            )}
+          </div>
+        </div>
       </form>
     </div>
   )
