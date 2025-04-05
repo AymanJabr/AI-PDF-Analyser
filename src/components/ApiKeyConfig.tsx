@@ -44,8 +44,8 @@ export default function ApiKeyConfig({
         const data = await response.json()
         setModels(data.models || [])
 
-        // Set default model if none is selected
-        if (!model && data.models && data.models.length > 0) {
+        // Set default model if none is selected or if provider changed
+        if (data.models && data.models.length > 0) {
           setModel(data.models[0].id)
         }
       } catch (err) {
@@ -56,7 +56,7 @@ export default function ApiKeyConfig({
         setIsLoadingModels(false)
       }
     },
-    [model]
+    [] // Remove model from dependency array to avoid circular dependencies
   )
 
   // Try to load saved API key on component mount
@@ -80,9 +80,15 @@ export default function ApiKeyConfig({
     setProvider(newProvider)
     setModel('') // Reset model when changing provider
 
-    // If API key is set, fetch models for new provider
-    if (apiKey) {
-      fetchModels(newProvider, apiKey)
+    // Load the saved API key for the selected provider, if available
+    const savedKey = getApiKey(newProvider)
+    if (savedKey) {
+      setApiKey(savedKey)
+      fetchModels(newProvider, savedKey)
+    } else {
+      // Clear API key input and models if no saved key exists for this provider
+      setApiKey('')
+      setModels([])
     }
   }
 

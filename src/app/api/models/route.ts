@@ -132,8 +132,6 @@ async function fetchOpenAIModels(apiKey: string): Promise<ModelInfo[]> {
         return b.id.localeCompare(a.id)
       })
 
-    console.log('chatModels', chatModels)
-
     return chatModels.length > 0 ? chatModels : DEFAULT_MODELS.openai
   } catch (error) {
     console.error('Error fetching OpenAI models:', error)
