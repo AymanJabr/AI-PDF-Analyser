@@ -8,11 +8,13 @@ import ReactMarkdown from 'react-markdown'
 interface ChatInterfaceProps {
   documentId: string
   apiKeyConfig: ApiKeyConfig
+  onReferenceClick?: (reference: DocumentReference) => void
 }
 
 export default function ChatInterface({
   documentId,
   apiKeyConfig,
+  onReferenceClick,
 }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -116,12 +118,17 @@ export default function ChatInterface({
               <p className='font-semibold mb-1'>References:</p>
               <ul className='space-y-1'>
                 {message.references.map((ref: DocumentReference, i: number) => (
-                  <li key={i} className='flex items-start'>
-                    <FileText className='h-3 w-3 mr-1 mt-0.5 flex-shrink-0' />
-                    <span className='text-xs'>
-                      Page {ref.pageNumber}: {ref.text.substring(0, 40)}
-                      {ref.text.length > 40 ? '...' : ''}
-                    </span>
+                  <li key={i}>
+                    <button
+                      onClick={() => onReferenceClick?.(ref)}
+                      className='flex items-start hover:bg-gray-200 p-1 rounded w-full text-left'
+                    >
+                      <FileText className='h-3 w-3 mr-1 mt-0.5 flex-shrink-0' />
+                      <span className='text-xs'>
+                        Page {ref.pageNumber}: {ref.text.substring(0, 40)}
+                        {ref.text.length > 40 ? '...' : ''}
+                      </span>
+                    </button>
                   </li>
                 ))}
               </ul>

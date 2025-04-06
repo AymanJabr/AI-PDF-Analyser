@@ -1,32 +1,74 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, FileText, X } from 'lucide-react'
-import { ProcessedDocument } from '@/types'
+import { ProcessedDocument, DocumentReference } from '@/types'
+import React from 'react'
 
 interface DocumentPreviewProps {
   document: ProcessedDocument
   onClear?: () => void
+  activeReference?: DocumentReference
 }
 
-export default function DocumentPreview({ document, onClear }: DocumentPreviewProps) {
+export default function DocumentPreview({
+  document,
+  onClear,
+  activeReference
+}: DocumentPreviewProps) {
   const [currentPage, setCurrentPage] = useState(0)
+  const [highlightedText, setHighlightedText] = useState<string | null>(null)
+
+  // Update current page when a reference is clicked
+  useEffect(() => {
+    if (activeReference) {
+      // PageNumber is 1-indexed in references but 0-indexed in our state
+      setCurrentPage(activeReference.pageNumber - 1)
+      setHighlightedText(activeReference.text)
+    } else {
+      setHighlightedText(null)
+    }
+  }, [activeReference])
 
   const handlePreviousPage = () => {
     setCurrentPage((prev) => Math.max(0, prev - 1))
+    setHighlightedText(null)
   }
 
   const handleNextPage = () => {
     setCurrentPage((prev) => Math.min(document.pageCount - 1, prev + 1))
+    setHighlightedText(null)
   }
 
   const handlePageSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const pageIndex = parseInt(e.target.value, 10)
     setCurrentPage(pageIndex)
+    setHighlightedText(null)
   }
 
   // Create an array of page numbers for the pagination display
   const pageNumbers = Array.from({ length: document.pageCount }, (_, i) => i)
+
+  // Function to highlight matched text
+  const renderPageContent = () => {
+    if (!highlightedText || !document.pageContents[currentPage].includes(highlightedText)) {
+      return document.pageContents[currentPage]
+    }
+
+    const parts = document.pageContents[currentPage].split(highlightedText)
+    return (
+      <>
+        {parts.map((part, index) => (
+          <React.Fragment key={index}>
+            {part}
+            {index < parts.length - 1 && (
+              <span className="bg-yellow-200 font-medium">{highlightedText}</span>
+            )}
+          </React.Fragment>
+        ))}
+      </>
+    )
+  }
 
   return (
     <div className='flex flex-col h-full border rounded-lg overflow-hidden bg-white'>
@@ -55,7 +97,7 @@ export default function DocumentPreview({ document, onClear }: DocumentPreviewPr
 
       <div className='flex-1 overflow-y-auto p-2 sm:p-4'>
         <div className='whitespace-pre-wrap bg-gray-50 p-2 sm:p-4 rounded border font-mono text-xs sm:text-sm text-gray-800'>
-          {document.pageContents[currentPage]}
+          {renderPageContent()}
         </div>
       </div>
 

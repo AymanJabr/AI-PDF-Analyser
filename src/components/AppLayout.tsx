@@ -7,7 +7,7 @@ import DocumentUploader from './DocumentUploader'
 import ApiKeyConfig from './ApiKeyConfig'
 import ChatInterface from './ChatInterface'
 import DocumentPreview from './DocumentPreview'
-import { ApiKeyConfig as ApiKeyConfigType, ProcessedDocument } from '@/types'
+import { ApiKeyConfig as ApiKeyConfigType, ProcessedDocument, DocumentReference } from '@/types'
 import Logo from './Logo'
 
 export default function AppLayout() {
@@ -18,6 +18,7 @@ export default function AppLayout() {
   const [apiKeyConfig, setApiKeyConfig] = useState<ApiKeyConfigType | null>(
     null
   )
+  const [activeReference, setActiveReference] = useState<DocumentReference | null>(null)
 
   const handleDocumentProcessed = async (docId: string) => {
     setDocumentId(docId)
@@ -61,6 +62,10 @@ export default function AppLayout() {
     if (documentId) {
       setActiveTab('chat')
     }
+  }
+
+  const handleReferenceClick = (reference: DocumentReference) => {
+    setActiveReference(reference)
   }
 
   return (
@@ -147,15 +152,17 @@ export default function AppLayout() {
                 ) : document && apiKeyConfig ? (
                   <div className='flex flex-col lg:flex-row gap-4 h-[70vh] w-full'>
                     <div className='w-full lg:w-1/2 h-[30vh] lg:h-full'>
-                      <DocumentPreview 
-                        document={document} 
+                      <DocumentPreview
+                        document={document}
                         onClear={handleClearDocument}
+                        activeReference={activeReference || undefined}
                       />
                     </div>
                     <div className='w-full lg:w-1/2 h-[40vh] lg:h-full border rounded-lg overflow-hidden bg-white'>
                       <ChatInterface
                         documentId={documentId as string}
                         apiKeyConfig={apiKeyConfig}
+                        onReferenceClick={handleReferenceClick}
                       />
                     </div>
                   </div>
