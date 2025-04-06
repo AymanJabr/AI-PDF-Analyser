@@ -1,12 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { FileText, Settings, X } from 'lucide-react'
+import { FileText, Settings, X, History } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs'
 import DocumentUploader from './DocumentUploader'
 import ApiKeyConfig from './ApiKeyConfig'
 import ChatInterface from './ChatInterface'
 import DocumentPreview from './DocumentPreview'
+import DocumentList from './DocumentList'
 import { ApiKeyConfig as ApiKeyConfigType, ProcessedDocument, DocumentReference } from '@/types'
 import Logo from './Logo'
 
@@ -103,7 +104,7 @@ export default function AppLayout() {
                 disabled={false}
               >
                 <FileText className='h-4 w-4 mr-2' />
-                Upload Document
+                Document Selection
               </TabsTrigger>
 
               <TabsTrigger
@@ -129,11 +130,23 @@ export default function AppLayout() {
               <TabsContent value='upload'>
                 <div className='max-w-3xl mx-auto py-4'>
                   <h2 className='text-lg font-medium mb-4 text-center text-gray-900'>
-                    Upload a PDF Document
+                    Document Selection
                   </h2>
-                  <DocumentUploader
-                    onDocumentProcessed={handleDocumentProcessed}
-                  />
+                  <div className="mb-8">
+                    <h3 className='text-md font-medium mb-4 text-gray-800'>
+                      Upload a New Document
+                    </h3>
+                    <DocumentUploader
+                      onDocumentProcessed={handleDocumentProcessed}
+                    />
+                  </div>
+
+                  <div className="mt-12 pt-8 border-t border-gray-200">
+                    <h3 className='text-md font-medium mb-4 text-gray-800'>
+                      Previously Uploaded Documents
+                    </h3>
+                    <DocumentList onSelectDocument={handleDocumentProcessed} />
+                  </div>
                 </div>
               </TabsContent>
 

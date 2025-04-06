@@ -27,6 +27,17 @@ export function storeDocument(document: ProcessedDocument): void {
     return
   }
 
+  // Check if a document with the same name already exists
+  const existingDocWithSameName = Object.values(globalDocuments).find(
+    doc => doc.name === document.name
+  )
+
+  if (existingDocWithSameName) {
+    console.log(`Document with name "${document.name}" already exists, updating existing entry`)
+    // Use the existing document's ID to update it
+    document.id = existingDocWithSameName.id
+  }
+
   // Store in memory (global scope for persistence between API calls)
   globalDocuments[document.id] = document
 
@@ -36,6 +47,7 @@ export function storeDocument(document: ProcessedDocument): void {
     pageCount: document.pageCount,
     contentLength: document.pageContents.length,
   })
+
   console.log(`Current documents in store:`, Object.keys(globalDocuments))
 }
 
@@ -62,6 +74,25 @@ export function getDocument(id: string): ProcessedDocument | null {
   }
 
   return doc
+}
+
+// Function to get all documents in the store
+export function getAllDocuments(): ProcessedDocument[] {
+  return Object.values(globalDocuments)
+}
+
+// Function to remove a document from the store
+export function removeDocument(id: string): boolean {
+  if (!id || !globalDocuments[id]) {
+    console.error(`Document with ID ${id} not found for deletion`)
+    return false
+  }
+
+  // Delete the document
+  delete globalDocuments[id]
+  console.log(`Document with ID ${id} removed from store`)
+  console.log(`Remaining documents in store:`, Object.keys(globalDocuments))
+  return true
 }
 
 // Export documents for compatibility with existing code

@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { FileUp, Loader2 } from 'lucide-react'
+import { FileUp, Loader2, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { processPDF } from '@/lib/pdfUtils'
 
@@ -15,6 +15,7 @@ export default function ClientDocumentUploader({
 }: ClientDocumentUploaderProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<{ text: string; isWarning?: boolean } | null>(null)
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
@@ -31,6 +32,7 @@ export default function ClientDocumentUploader({
       try {
         setIsUploading(true)
         setError(null)
+        setMessage(null)
 
         // Process PDF on the client side
         const processedData = await processPDF(pdfFile)
@@ -49,6 +51,18 @@ export default function ClientDocumentUploader({
         }
 
         const data = await response.json()
+
+        if (data.isUpdate) {
+          setMessage({
+            text: `Document "${pdfFile.name}" already exists and has been updated.`,
+            isWarning: true
+          })
+        } else {
+          setMessage({
+            text: `Document "${pdfFile.name}" uploaded successfully.`
+          })
+        }
+
         onDocumentProcessed(data.documentId)
       } catch (err) {
         setError(
@@ -112,7 +126,22 @@ export default function ClientDocumentUploader({
         </div>
       </div>
 
-      {error && <div className='mt-3 text-red-500 text-sm'>{error}</div>}
+      {error && (
+        <div className='mt-3 text-red-500 text-sm flex items-start'>
+          <AlertCircle className='h-4 w-4 mr-1 mt-0.5 flex-shrink-0' />
+          {error}
+        </div>
+      )}
+
+      {message && (
+        <div className={cn(
+          'mt-3 text-sm flex items-start',
+          message.isWarning ? 'text-amber-600' : 'text-green-600'
+        )}>
+          <AlertCircle className='h-4 w-4 mr-1 mt-0.5 flex-shrink-0' />
+          {message.text}
+        </div>
+      )}
     </div>
   )
 } 
