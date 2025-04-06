@@ -86,9 +86,8 @@ export default function ChatInterface({
         ...prev,
         {
           role: 'assistant',
-          content: `Sorry, I encountered an error while processing your request: ${
-            error instanceof Error ? error.message : String(error)
-          }. Please try again or upload your document again if the problem persists.`,
+          content: `Sorry, I encountered an error while processing your request: ${error instanceof Error ? error.message : String(error)
+            }. Please try again or upload your document again if the problem persists.`,
         },
       ])
     } finally {
@@ -105,9 +104,8 @@ export default function ChatInterface({
         className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3`}
       >
         <div
-          className={`max-w-[85%] sm:max-w-[75%] rounded-lg px-3 py-2 ${
-            isUser ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-800'
-          }`}
+          className={`max-w-[85%] sm:max-w-[75%] rounded-lg px-3 py-2 ${isUser ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-800'
+            }`}
         >
           <div className='prose prose-sm max-w-none'>
             <ReactMarkdown>{message.content}</ReactMarkdown>

@@ -43,8 +43,7 @@ export default function AppLayout() {
     } catch (error) {
       console.error('Error fetching document:', error)
       setError(
-        `Failed to load document: ${
-          error instanceof Error ? error.message : String(error)
+        `Failed to load document: ${error instanceof Error ? error.message : String(error)
         }`
       )
     }
