@@ -2,16 +2,108 @@ import { NextRequest, NextResponse } from 'next/server'
 import { ChatOpenAI } from '@langchain/openai'
 import { ChatAnthropic } from '@langchain/anthropic'
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
-import { MemoryVectorStore } from 'langchain/vectorstores/memory'
 import { Document } from 'langchain/document'
 import { DocumentReference } from '@/types'
-import { FakeEmbeddings } from 'langchain/embeddings/fake'
+import { OpenAIEmbeddings } from '@langchain/openai'
+import { VoyageEmbeddings } from '@/lib/embeddings'
 import { getDocument } from '@/lib/documentStore'
+import { getApiKey } from '@/lib/utils'
 
 // OpenAI default model
 const DEFAULT_OPENAI_MODEL = 'gpt-3.5-turbo'
 // Anthropic default model
 const DEFAULT_ANTHROPIC_MODEL = 'claude-3-sonnet-20240229'
+
+// Simple in-memory vector store implementation
+class SimpleVectorStore {
+  private documents: Document[] = [];
+  private embeddings: number[][] = [];
+  private provider: 'openai' | 'anthropic';
+  private apiKey: string;
+  private voyageApiKey?: string;
+
+  constructor(
+    documents: Document[],
+    embeddings: number[][],
+    provider: 'openai' | 'anthropic',
+    apiKey: string,
+    voyageApiKey?: string
+  ) {
+    this.documents = documents;
+    this.embeddings = embeddings;
+    this.provider = provider;
+    this.apiKey = apiKey;
+    this.voyageApiKey = voyageApiKey;
+  }
+
+  async similaritySearch(query: string, k: number = 4): Promise<Document[]> {
+    // Get query embedding
+    let queryEmbedding: number[];
+
+    if (this.embeddings.length > 0) {
+      // Use the same embedding provider that was used for the documents
+      const embeddingProvider = this.getEmbeddingProvider();
+      queryEmbedding = await embeddingProvider.embedQuery(query);
+    } else {
+      throw new Error('No documents in vector store');
+    }
+
+    // Calculate cosine similarity
+    const similarities = this.embeddings.map((docEmbedding, index) => {
+      return {
+        index,
+        similarity: this.cosineSimilarity(queryEmbedding, docEmbedding)
+      };
+    });
+
+    // Sort by similarity (descending)
+    similarities.sort((a, b) => b.similarity - a.similarity);
+
+    // Return top k documents
+    return similarities.slice(0, k).map(item => this.documents[item.index]);
+  }
+
+  private cosineSimilarity(vecA: number[], vecB: number[]): number {
+    if (vecA.length !== vecB.length) {
+      throw new Error('Vectors must have the same length');
+    }
+
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+
+    for (let i = 0; i < vecA.length; i++) {
+      dotProduct += vecA[i] * vecB[i];
+      normA += vecA[i] * vecA[i];
+      normB += vecB[i] * vecB[i];
+    }
+
+    normA = Math.sqrt(normA);
+    normB = Math.sqrt(normB);
+
+    if (normA === 0 || normB === 0) {
+      return 0;
+    }
+
+    return dotProduct / (normA * normB);
+  }
+
+  private getEmbeddingProvider() {
+    if (this.provider === 'openai') {
+      return new OpenAIEmbeddings({
+        apiKey: this.apiKey,
+      });
+    } else {
+      if (!this.voyageApiKey) {
+        throw new Error('Voyage API key is required for Anthropic provider');
+      }
+      return new VoyageEmbeddings(this.voyageApiKey, {
+        model: 'voyage-3-large',
+        inputType: 'query'
+      });
+    }
+  }
+}
 
 // Define both handler methods explicitly with named exports
 export async function POST(req: NextRequest) {
@@ -105,17 +197,47 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Create a simple in-memory vector store with fake embeddings
-    const vectorStore = await MemoryVectorStore.fromDocuments(
-      docs,
-      new FakeEmbeddings()
-    )
+    // Set up embeddings based on provider
+    let documentEmbeddings: number[][] = [];
 
-    // Use the vector store as a retriever
-    const retriever = vectorStore.asRetriever(4) // Get top 4 most relevant chunks
+    if (apiKeyConfig.provider === 'openai') {
+      const embeddings = new OpenAIEmbeddings({
+        apiKey: apiKeyConfig.apiKey,
+      });
+      documentEmbeddings = await embeddings.embedDocuments(
+        docs.map(doc => doc.pageContent)
+      );
+    } else {
+      // For Anthropic, we need to get the Voyage API key
+      const voyageApiKey = apiKeyConfig.voyageApiKey || getApiKey('voyage');
+
+      if (!voyageApiKey) {
+        return NextResponse.json(
+          { error: 'Voyage AI API key is required for Anthropic provider' },
+          { status: 400 }
+        );
+      }
+
+      const embeddings = new VoyageEmbeddings(voyageApiKey, {
+        model: 'voyage-3-large',
+        inputType: 'document'
+      });
+      documentEmbeddings = await embeddings.embedDocuments(
+        docs.map(doc => doc.pageContent)
+      );
+    }
+
+    // Create our custom vector store
+    const vectorStore = new SimpleVectorStore(
+      docs,
+      documentEmbeddings,
+      apiKeyConfig.provider,
+      apiKeyConfig.apiKey,
+      apiKeyConfig.voyageApiKey || getApiKey('voyage')
+    );
 
     // Get relevant documents for the query
-    const relevantDocs = await retriever.invoke(message)
+    const relevantDocs = await vectorStore.similaritySearch(message, 4);
 
     // Format the context from relevant documents
     const context = relevantDocs

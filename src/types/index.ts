@@ -2,6 +2,7 @@ export interface ApiKeyConfig {
   provider: 'openai' | 'anthropic'
   apiKey: string
   model?: string // The selected model ID
+  voyageApiKey?: string // Required when provider is 'anthropic'
 }
 
 export interface ModelInfo {

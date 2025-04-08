@@ -14,8 +14,10 @@ export default function ApiKeyConfig({
 }: ApiKeyConfigProps) {
   const [provider, setProvider] = useState<'openai' | 'anthropic'>('openai')
   const [apiKey, setApiKey] = useState('')
+  const [voyageApiKey, setVoyageApiKey] = useState('')
   const [model, setModel] = useState<string>('')
   const [showApiKey, setShowApiKey] = useState(false)
+  const [showVoyageApiKey, setShowVoyageApiKey] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [isLoadingModels, setIsLoadingModels] = useState(false)
@@ -78,6 +80,7 @@ export default function ApiKeyConfig({
   useEffect(() => {
     const savedOpenAIKey = getApiKey('openai')
     const savedAnthropicKey = getApiKey('anthropic')
+    const savedVoyageKey = getApiKey('voyage')
 
     if (savedOpenAIKey) {
       setProvider('openai')
@@ -86,6 +89,9 @@ export default function ApiKeyConfig({
     } else if (savedAnthropicKey) {
       setProvider('anthropic')
       setApiKey(savedAnthropicKey)
+      if (savedVoyageKey) {
+        setVoyageApiKey(savedVoyageKey)
+      }
       fetchModels('anthropic', savedAnthropicKey)
     }
   }, [fetchModels])
@@ -128,42 +134,46 @@ export default function ApiKeyConfig({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
+    setSuccess(null)
 
     if (!apiKey) {
-      setError('Please enter your API key')
-      setSuccess(null)
+      setError('Please enter an API key')
+      return
+    }
+
+    if (provider === 'anthropic' && !voyageApiKey) {
+      setError('Voyage AI API key is required for Anthropic provider')
       return
     }
 
     if (!model) {
       setError('Please select a model')
-      setSuccess(null)
       return
     }
 
-    try {
-      // Store API key in localStorage
-      storeApiKey(provider, apiKey)
-
-      // Notify parent component
-      onApiKeyConfigured({
-        provider,
-        apiKey,
-        model,
-      })
-
-      // Show success message
-      setSuccess('API settings saved successfully!')
-      setError(null)
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccess(null)
-      }, 3000)
-    } catch (err) {
-      setError(`Failed to save API key: ${err}`)
-      setSuccess(null)
+    // Store API keys in session storage
+    storeApiKey(provider, apiKey)
+    if (provider === 'anthropic') {
+      storeApiKey('voyage', voyageApiKey)
     }
+
+    // Create config object
+    const config: ApiKeyConfigType = {
+      provider,
+      apiKey,
+      model,
+    }
+
+    // Add Voyage API key if using Anthropic
+    if (provider === 'anthropic') {
+      config.voyageApiKey = voyageApiKey
+    }
+
+    // Notify parent component
+    onApiKeyConfigured(config)
+
+    setSuccess('API configuration saved successfully')
   }
 
   const handleClearApiKeys = () => {
@@ -175,6 +185,7 @@ export default function ApiKeyConfig({
     setApiKey('')
     setModel('')
     setModels([])
+    setVoyageApiKey('')
 
     // Show success message
     setSuccess('API keys cleared successfully')
@@ -280,6 +291,45 @@ export default function ApiKeyConfig({
           </div>
         </div>
 
+        {provider === 'anthropic' && (
+          <div className="space-y-2">
+            <label
+              htmlFor='voyageApiKey'
+              className='block text-sm font-medium text-gray-900 mb-1'
+            >
+              Voyage AI API Key
+            </label>
+            <div className="relative">
+              <input
+                id='voyageApiKey'
+                type={showVoyageApiKey ? 'text' : 'password'}
+                value={voyageApiKey}
+                onChange={(e) => setVoyageApiKey(e.target.value)}
+                placeholder='Enter your Voyage AI API key'
+                className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm placeholder:text-gray-600 text-gray-900'
+              />
+              <button
+                type='button'
+                onClick={() => setShowVoyageApiKey(!showVoyageApiKey)}
+                className='absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700'
+              >
+                {showVoyageApiKey ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            <p className='mt-1 text-xs text-gray-700'>
+              Required for Anthropic provider. Get your key at{' '}
+              <a
+                href="https://dashboard.voyageai.com/api-keys"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                Voyage AI Dashboard
+              </a>
+            </p>
+          </div>
+        )}
+
         <div>
           <label
             htmlFor='model'
@@ -339,7 +389,7 @@ export default function ApiKeyConfig({
           Save API Settings
         </button>
 
-        {success && success === 'API settings saved successfully!' && (
+        {success && success === 'API configuration saved successfully' && (
           <div className='mt-3 text-center text-blue-600 text-sm font-medium'>
             {success}
           </div>

@@ -70,7 +70,7 @@ function decryptApiKey(encryptedKey: string): string {
  * Safely store API keys in sessionStorage with encryption
  */
 export function storeApiKey(
-  provider: 'openai' | 'anthropic',
+  provider: 'openai' | 'anthropic' | 'voyage',
   apiKey: string
 ): void {
   // Encrypt the API key before storing
@@ -81,7 +81,7 @@ export function storeApiKey(
 /**
  * Retrieve API keys from sessionStorage
  */
-export function getApiKey(provider: 'openai' | 'anthropic'): string | null {
+export function getApiKey(provider: 'openai' | 'anthropic' | 'voyage'): string | null {
   const encryptedKey = sessionStorage.getItem(`apiKey_${provider}`)
   if (!encryptedKey) return null
 
