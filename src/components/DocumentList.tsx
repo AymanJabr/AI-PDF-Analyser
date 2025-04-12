@@ -92,7 +92,11 @@ export default function DocumentList({ onSelectDocument }: DocumentListProps) {
             <h3 className="text-sm font-medium text-gray-500">Previous documents</h3>
             <ul className="divide-y divide-gray-200 border rounded-lg">
                 {documents.map((doc) => (
-                    <li key={doc.id} className="p-4 hover:bg-gray-50">
+                    <li
+                        key={doc.id}
+                        className="p-4 hover:bg-gray-50 cursor-pointer relative"
+                        onClick={() => onSelectDocument(doc.id)}
+                    >
                         <div className="flex justify-between items-center">
                             <div className="flex items-start space-x-3">
                                 <FileText className="h-5 w-5 text-gray-500 mt-0.5" />
@@ -105,26 +109,18 @@ export default function DocumentList({ onSelectDocument }: DocumentListProps) {
                                     <p className="text-xs text-gray-500 mt-1">{doc.pageCount} {doc.pageCount === 1 ? 'page' : 'pages'}</p>
                                 </div>
                             </div>
-                            <div className="flex space-x-2">
-                                <button
-                                    onClick={(e) => handleDeleteDocument(doc.id, e)}
-                                    disabled={isDeleting[doc.id]}
-                                    className="p-1.5 text-red-500 hover:bg-red-50 rounded-md disabled:opacity-50 transition-colors"
-                                    title="Delete document"
-                                >
-                                    {isDeleting[doc.id] ? (
-                                        <div className="h-4 w-4 border-2 border-t-transparent border-red-400 rounded-full animate-spin" />
-                                    ) : (
-                                        <Trash2 className="h-4 w-4" />
-                                    )}
-                                </button>
-                                <button
-                                    onClick={() => onSelectDocument(doc.id)}
-                                    className="px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors"
-                                >
-                                    Select
-                                </button>
-                            </div>
+                            <button
+                                onClick={(e) => handleDeleteDocument(doc.id, e)}
+                                disabled={isDeleting[doc.id]}
+                                className="p-2 text-red-500 hover:bg-red-50 rounded-md disabled:opacity-50 transition-colors"
+                                title="Delete document"
+                            >
+                                {isDeleting[doc.id] ? (
+                                    <div className="h-5 w-5 border-2 border-t-transparent border-red-400 rounded-full animate-spin" />
+                                ) : (
+                                    <Trash2 className="h-5 w-5" />
+                                )}
+                            </button>
                         </div>
                     </li>
                 ))}
