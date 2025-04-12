@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { ApiKeyConfig as ApiKeyConfigType, ModelInfo } from '@/types'
-import { storeApiKey, getApiKey } from '@/lib/utils'
+import { storeApiKey, getApiKey, storeLastProvider, storeLastModel, getLastProvider, getLastModel } from '@/lib/utils'
 import { KeyRound, Eye, EyeOff, Loader2 } from 'lucide-react'
 
 interface ApiKeyConfigProps {
@@ -81,8 +81,30 @@ export default function ApiKeyConfig({
     const savedOpenAIKey = getApiKey('openai')
     const savedAnthropicKey = getApiKey('anthropic')
     const savedVoyageKey = getApiKey('voyage')
+    const lastProvider = getLastProvider()
+    const lastModel = getLastModel()
 
-    if (savedOpenAIKey) {
+    // If we have a saved last provider, use it
+    if (lastProvider && ((lastProvider === 'openai' && savedOpenAIKey) || (lastProvider === 'anthropic' && savedAnthropicKey))) {
+      setProvider(lastProvider)
+      const savedKey = getApiKey(lastProvider)
+      if (savedKey) {
+        setApiKey(savedKey)
+        fetchModels(lastProvider, savedKey).then(() => {
+          // After models are loaded, set the last used model if available
+          if (lastModel) {
+            setModel(lastModel)
+          }
+        })
+
+        // Load Voyage API key if using Anthropic
+        if (lastProvider === 'anthropic' && savedVoyageKey) {
+          setVoyageApiKey(savedVoyageKey)
+        }
+      }
+    }
+    // Otherwise, use the first available key
+    else if (savedOpenAIKey) {
       setProvider('openai')
       setApiKey(savedOpenAIKey)
       fetchModels('openai', savedOpenAIKey)
@@ -171,6 +193,10 @@ export default function ApiKeyConfig({
       storeApiKey('voyage', voyageApiKey)
     }
 
+    // Store the last used provider and model
+    storeLastProvider(provider)
+    storeLastModel(model)
+
     // Create config object
     const config: ApiKeyConfigType = {
       provider,
@@ -194,6 +220,8 @@ export default function ApiKeyConfig({
     sessionStorage.removeItem(`apiKey_openai`)
     sessionStorage.removeItem(`apiKey_anthropic`)
     sessionStorage.removeItem(`apiKey_voyage`)
+    sessionStorage.removeItem('lastProvider')
+    sessionStorage.removeItem('lastModel')
 
     // Reset state
     setApiKey('')

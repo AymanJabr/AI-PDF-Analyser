@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { FileText, Settings, X, History } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs'
 import DocumentUploader from './DocumentUploader'
@@ -10,6 +10,7 @@ import DocumentPreview from './DocumentPreview'
 import DocumentList from './DocumentList'
 import { ApiKeyConfig as ApiKeyConfigType, ProcessedDocument, DocumentReference } from '@/types'
 import Logo from './Logo'
+import { getApiKey, getLastProvider, getLastModel } from '@/lib/utils'
 
 export default function AppLayout() {
   const [activeTab, setActiveTab] = useState('upload')
@@ -20,6 +21,33 @@ export default function AppLayout() {
     null
   )
   const [activeReference, setActiveReference] = useState<DocumentReference | null>(null)
+
+  // Check for saved API settings on component mount
+  useEffect(() => {
+    const lastProvider = getLastProvider()
+    if (lastProvider) {
+      const apiKey = getApiKey(lastProvider)
+      const model = getLastModel()
+
+      if (apiKey && model) {
+        const config: ApiKeyConfigType = {
+          provider: lastProvider,
+          apiKey,
+          model,
+        }
+
+        // Add Voyage API key if using Anthropic
+        if (lastProvider === 'anthropic') {
+          const voyageApiKey = getApiKey('voyage')
+          if (voyageApiKey) {
+            config.voyageApiKey = voyageApiKey
+          }
+        }
+
+        setApiKeyConfig(config)
+      }
+    }
+  }, [])
 
   const handleDocumentProcessed = async (docId: string) => {
     setDocumentId(docId)

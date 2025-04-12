@@ -79,6 +79,20 @@ export function storeApiKey(
 }
 
 /**
+ * Store the last used provider in sessionStorage
+ */
+export function storeLastProvider(provider: 'openai' | 'anthropic'): void {
+  sessionStorage.setItem('lastProvider', provider)
+}
+
+/**
+ * Store the last used model in sessionStorage
+ */
+export function storeLastModel(model: string): void {
+  sessionStorage.setItem('lastModel', model)
+}
+
+/**
  * Retrieve API keys from sessionStorage
  */
 export function getApiKey(provider: 'openai' | 'anthropic' | 'voyage'): string | null {
@@ -87,6 +101,21 @@ export function getApiKey(provider: 'openai' | 'anthropic' | 'voyage'): string |
 
   // Decrypt the API key
   return decryptApiKey(encryptedKey)
+}
+
+/**
+ * Retrieve the last used provider from sessionStorage
+ */
+export function getLastProvider(): 'openai' | 'anthropic' | null {
+  const provider = sessionStorage.getItem('lastProvider') as 'openai' | 'anthropic' | null
+  return provider
+}
+
+/**
+ * Retrieve the last used model from sessionStorage
+ */
+export function getLastModel(): string | null {
+  return sessionStorage.getItem('lastModel')
 }
 
 /**
