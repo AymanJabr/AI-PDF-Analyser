@@ -233,7 +233,7 @@ export async function POST(req: NextRequest) {
       documentEmbeddings,
       apiKeyConfig.provider,
       apiKeyConfig.apiKey,
-      apiKeyConfig.voyageApiKey || getApiKey('voyage')
+      apiKeyConfig.voyageApiKey
     );
 
     // Get relevant documents for the query

@@ -248,7 +248,7 @@ export default function ApiKeyConfig({
               onChange={handleApiKeyChange}
               onBlur={handleApiKeyBlur}
               placeholder='Enter your API key'
-              className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm placeholder:text-gray-600 text-gray-900'
+              className='w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm placeholder:text-gray-600 text-gray-900'
             />
             <button
               type='button'
@@ -306,14 +306,18 @@ export default function ApiKeyConfig({
                 value={voyageApiKey}
                 onChange={(e) => setVoyageApiKey(e.target.value)}
                 placeholder='Enter your Voyage AI API key'
-                className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm placeholder:text-gray-600 text-gray-900'
+                className='w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm placeholder:text-gray-600 text-gray-900'
               />
               <button
                 type='button'
                 onClick={() => setShowVoyageApiKey(!showVoyageApiKey)}
-                className='absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700'
+                className='absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600 hover:text-gray-800'
               >
-                {showVoyageApiKey ? 'Hide' : 'Show'}
+                {showVoyageApiKey ? (
+                  <EyeOff className='h-4 w-4' />
+                ) : (
+                  <Eye className='h-4 w-4' />
+                )}
               </button>
             </div>
             <p className='mt-1 text-xs text-gray-700'>
