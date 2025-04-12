@@ -95,6 +95,14 @@ export default function ChatInterface({
     }
   }
 
+  // Handle keyboard events for textarea
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && e.ctrlKey) {
+      e.preventDefault()
+      handleSubmit(e as unknown as React.FormEvent)
+    }
+  }
+
   const renderMessage = (message: Message, index: number) => {
     const isUser = message.role === 'user'
 
@@ -164,19 +172,23 @@ export default function ChatInterface({
       </div>
 
       <div className='border-t p-2 sm:p-4'>
-        <form onSubmit={handleSubmit} className='flex space-x-2'>
-          <input
-            type='text'
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder='Ask a question about the document...'
-            className='flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder:text-gray-600 text-gray-900'
-            disabled={isLoading}
-          />
+        <form onSubmit={handleSubmit} className='flex flex-col space-y-2'>
+          <div className="relative flex-1">
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder='Ask a question about the document...'
+              className='w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder:text-gray-600 text-gray-900 min-h-[60px] resize-none'
+              disabled={isLoading}
+              rows={3}
+            />
+            <div className="text-xs text-gray-500 mt-1">Press Ctrl+Enter to send</div>
+          </div>
           <button
             type='submit'
             disabled={isLoading || !input.trim()}
-            className='bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-70'
+            className='self-end bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-70'
           >
             {isLoading ? (
               <Loader2 className='h-4 w-4 sm:h-5 sm:w-5 animate-spin' />
