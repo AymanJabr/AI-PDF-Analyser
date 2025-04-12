@@ -237,11 +237,13 @@ export async function POST(req: NextRequest) {
     );
 
     // Get relevant documents for the query
-    const relevantDocs = await vectorStore.similaritySearch(message, 4);
+    const relevantDocs = await vectorStore.similaritySearch(message, 100);
 
-    // Format the context from relevant documents
+    // Format the context from relevant documents with explicit page numbers
     const context = relevantDocs
-      .map((doc: Document) => doc.pageContent)
+      .map((doc: Document) =>
+        `PAGE ${doc.metadata.pageNumber}\n${doc.pageContent}`
+      )
       .join('\n\n')
 
     // Format the prompt with context and instruction to cite sources
@@ -254,9 +256,13 @@ export async function POST(req: NextRequest) {
     USER QUESTION:
     ${message}
     
-    Provide a helpful response based solely on the context above. 
+    Provide a helpful response based solely on the context above.
     If you don't know the answer based on the provided context, say so.
-    Be detailed but concise, and make sure to cite the page numbers where you found the information.
+    Be detailed but concise.
+    
+    IMPORTANT: When citing information, use ONLY the exact page numbers as provided in the context (marked as [PAGE X]).
+    Always cite the source page number when you reference information from the context.
+    ONLY cite page numbers that are explicitly provided in the context sections above.
     Format your response in Markdown.
     `
 
