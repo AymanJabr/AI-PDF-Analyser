@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Send, Loader2, FileText } from 'lucide-react'
+import { Send, Loader2, FileText, AlertTriangle } from 'lucide-react'
 import { Message, DocumentReference, ApiKeyConfig } from '@/types'
 import ReactMarkdown from 'react-markdown'
+import { parseContextLengthError, estimateTokens } from '@/lib/utils'
+import ContextLengthErrorModal from './ContextLengthErrorModal'
 
 interface ChatInterfaceProps {
   documentId: string
@@ -20,16 +22,65 @@ export default function ChatInterface({
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [contextError, setContextError] = useState<{
+    maxTokens: number;
+    usedTokens: number;
+  } | null>(null)
+  const [tokenUsage, setTokenUsage] = useState({
+    estimatedUsage: 0
+  })
+  const [documentText, setDocumentText] = useState<string>('')
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  // Fetch document text to estimate token usage
+  useEffect(() => {
+    const fetchDocumentText = async () => {
+      try {
+        const response = await fetch(`/api/analyze?documentId=${documentId}`)
+        if (!response.ok) throw new Error('Failed to fetch document')
+        const data = await response.json()
+        setDocumentText(data.text || '')
+      } catch (err) {
+        console.error('Error fetching document text:', err)
+      }
+    }
+
+    fetchDocumentText()
+  }, [documentId])
+
+  // Update token usage when messages or document text changes
+  useEffect(() => {
+    let total = 0
+
+    // Count tokens in messages
+    messages.forEach(msg => {
+      total += estimateTokens(msg.content)
+    })
+
+    // Add estimated tokens from current input
+    total += estimateTokens(input)
+
+    // Add estimated tokens from document
+    if (documentText) {
+      total += estimateTokens(documentText)
+    }
+
+    setTokenUsage({
+      estimatedUsage: total
+    })
+  }, [messages, input, documentText])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!input.trim() || isLoading) return
+
+    // Clear any previous errors
+    setContextError(null)
 
     const userMessage: Message = {
       role: 'user',
@@ -65,6 +116,21 @@ export default function ChatInterface({
         if (response.status === 404) {
           errorMessage =
             'Document not found. This might be due to the server restarting. Please try uploading your document again.'
+        } else if (errorData?.error) {
+          errorMessage = errorData.error
+
+          // Check if it's a context length error
+          const contextLengthError = parseContextLengthError(errorData.error)
+          if (contextLengthError) {
+            setContextError({
+              maxTokens: contextLengthError.maxTokens,
+              usedTokens: contextLengthError.usedTokens
+            })
+
+            // Don't throw - we'll handle this specially
+            setIsLoading(false)
+            return
+          }
         }
 
         throw new Error(errorMessage)
@@ -82,6 +148,7 @@ export default function ChatInterface({
     } catch (error) {
       // Add error message
       console.error('Chat error:', error)
+
       setMessages((prev) => [
         ...prev,
         {
@@ -147,6 +214,15 @@ export default function ChatInterface({
 
   return (
     <div className='flex flex-col h-full'>
+      {/* Use the new Context Length Error Modal component */}
+      {contextError && (
+        <ContextLengthErrorModal
+          maxTokens={contextError.maxTokens}
+          usedTokens={contextError.usedTokens}
+          onClose={() => setContextError(null)}
+        />
+      )}
+
       <div className='flex-1 overflow-y-auto p-2 sm:p-4 space-y-3'>
         {messages.length === 0 ? (
           <div className='flex items-center justify-center h-full text-gray-700'>
@@ -183,7 +259,12 @@ export default function ChatInterface({
               disabled={isLoading}
               rows={3}
             />
-            <div className="text-xs text-gray-500 mt-1">Press Ctrl+Enter to send</div>
+            <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
+              <div>Press Ctrl+Enter to send</div>
+              <div className="text-gray-600">
+                Estimated token usage: {tokenUsage.estimatedUsage.toLocaleString()}
+              </div>
+            </div>
           </div>
           <button
             type='submit'

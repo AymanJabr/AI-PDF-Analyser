@@ -128,3 +128,36 @@ export function chunkText(text: string, chunkSize = 1000): string[] {
   }
   return chunks
 }
+
+/**
+ * Parse context length error messages from LLM APIs
+ * Returns the max tokens and used tokens if it's a context length error
+ */
+export function parseContextLengthError(errorMessage: string): {
+  maxTokens: number;
+  usedTokens: number;
+  isContextLengthError: boolean
+} | null {
+  // Match patterns like "maximum context length is 8192 tokens. However, your messages resulted in 16614 tokens"
+  const regex = /maximum context length is (\d+) tokens.*resulted in (\d+) tokens/i;
+  const matches = errorMessage.match(regex);
+
+  if (matches && matches.length === 3) {
+    return {
+      maxTokens: parseInt(matches[1], 10),
+      usedTokens: parseInt(matches[2], 10),
+      isContextLengthError: true
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Estimate token count for a given text
+ * This is a rough estimate (~4 characters per token for English text)
+ */
+export function estimateTokens(text: string): number {
+  // Rough estimate: ~4 chars per token for English text
+  return Math.ceil(text.length / 4);
+}
