@@ -106,10 +106,23 @@ export default function ApiKeyConfig({
     if (savedKey) {
       setApiKey(savedKey)
       fetchModels(newProvider, savedKey)
+
+      // Also load the saved Voyage API key when switching to Anthropic
+      if (newProvider === 'anthropic') {
+        const savedVoyageKey = getApiKey('voyage')
+        if (savedVoyageKey) {
+          setVoyageApiKey(savedVoyageKey)
+        }
+      }
     } else {
       // Clear API key input and models if no saved key exists for this provider
       setApiKey('')
       setModels([])
+
+      // Clear Voyage API key if switching to OpenAI
+      if (newProvider === 'openai') {
+        setVoyageApiKey('')
+      }
     }
   }
 
@@ -180,6 +193,7 @@ export default function ApiKeyConfig({
     // Clear from session storage
     sessionStorage.removeItem(`apiKey_openai`)
     sessionStorage.removeItem(`apiKey_anthropic`)
+    sessionStorage.removeItem(`apiKey_voyage`)
 
     // Reset state
     setApiKey('')
