@@ -260,49 +260,139 @@ export async function POST(req: NextRequest) {
     If you don't know the answer based on the provided context, say so.
     Be detailed but concise.
     
-    IMPORTANT: When citing information, use ONLY the exact page numbers as provided in the context (marked as [PAGE X]).
-    Always cite the source page number when you reference information from the context.
-    ONLY cite page numbers that are explicitly provided in the context sections above.
+    IMPORTANT CITATION INSTRUCTIONS:
+    1. Always cite information using page numbers from the context (marked as PAGE X).
+    2. Format your citations consistently as [PAGE X] inline with your text.
+    3. When you mention information from a specific page, always include the page number.
+    4. Only cite page numbers that are explicitly provided in the context sections above.
+    
     Format your response in Markdown.
     `
 
     // Generate response
     const response = await model.invoke(prompt)
+    const responseText = typeof response === 'string'
+      ? response
+      : (typeof response.content === 'string'
+        ? response.content
+        : JSON.stringify(response.content))
+
+    // Extract page numbers mentioned in the response using regex
+    const mentionedPages = new Set<number>()
+
+    // Look for various patterns like "PAGE X", "page X", "Page X", "[PAGE X]", etc.
+    const pagePatterns = [
+      /PAGE\s+(\d+)/gi,       // "PAGE 42"
+      /page\s+(\d+)/gi,       // "page 42"
+      /\[PAGE\s+(\d+)\]/gi,   // "[PAGE 42]"
+      /\[page\s+(\d+)\]/gi,   // "[page 42]"
+      /Page\s+(\d+)/g         // "Page 42"
+    ]
+
+    pagePatterns.forEach((pattern) => {
+      let match;
+      while ((match = pattern.exec(responseText)) !== null) {
+        if (match[1]) {
+          const pageNumber = parseInt(match[1], 10);
+          if (!isNaN(pageNumber)) {
+            mentionedPages.add(pageNumber);
+          }
+        }
+      }
+    });
+
+    console.log(`Found ${mentionedPages.size} mentioned pages in AI response:`, [...mentionedPages]);
 
     // Extract references from relevant docs with improved relevance
-    const references: DocumentReference[] = relevantDocs.map(
-      (doc: Document) => {
+    const references: DocumentReference[] = relevantDocs
+      .filter((doc: Document) => mentionedPages.has(doc.metadata.pageNumber as number))
+      .map((doc: Document) => {
         // Find the most relevant part of the document by looking for keyword matches
         // or use the beginning if no clear relevance signals
         const content = doc.pageContent;
         let relevantSection = content.substring(0, 150); // Default to first 150 chars
+        let highlightRange = { start: 0, end: Math.min(content.length, 300) }; // Default highlight range
 
         // Simple heuristic: try to find parts of the content that contain words from the query
         const queryWords = message.toLowerCase().split(/\s+/).filter((word: string) =>
           word.length > 3 && !['what', 'where', 'when', 'how', 'the', 'this', 'that', 'with'].includes(word)
         );
 
-        for (const word of queryWords) {
-          const index = content.toLowerCase().indexOf(word);
+        // Try to find exact matches of significant phrases (3+ words) from the query
+        const significantPhrases: string[] = [];
+        if (message.length > 10) {
+          // Get phrases of 3-6 consecutive words from the query
+          const words = message.split(/\s+/);
+          for (let size = Math.min(6, words.length); size >= 3; size--) {
+            for (let i = 0; i <= words.length - size; i++) {
+              const phrase = words.slice(i, i + size).join(' ');
+              if (phrase.length > 10) {
+                significantPhrases.push(phrase);
+              }
+            }
+          }
+        }
+
+        // First try to match significant phrases (more specific)
+        let foundMatch = false;
+        for (const phrase of significantPhrases) {
+          const index = content.toLowerCase().indexOf(phrase.toLowerCase());
           if (index >= 0) {
-            // Extract text around the match, centered on the match if possible
-            const start = Math.max(0, index - 75);
-            const end = Math.min(content.length, index + 75);
+            // Calculate a reasonable range around the phrase match
+            const phraseLength = phrase.length;
+            const contextSize = Math.max(100, phraseLength * 3); // Dynamic context size
+            const start = Math.max(0, index - contextSize / 2);
+            const end = Math.min(content.length, index + phraseLength + contextSize / 2);
+
             relevantSection = content.substring(start, end);
+            highlightRange = { start, end };
+            foundMatch = true;
             break;
+          }
+        }
+
+        // If no phrase match, fall back to keyword matching
+        if (!foundMatch) {
+          for (const word of queryWords) {
+            const index = content.toLowerCase().indexOf(word);
+            if (index >= 0) {
+              // Extract text around the match, with a reasonable context
+              const start = Math.max(0, index - 150);
+              const end = Math.min(content.length, index + word.length + 150);
+              relevantSection = content.substring(start, end);
+              highlightRange = { start, end };
+              foundMatch = true;
+              break;
+            }
           }
         }
 
         return {
           pageNumber: doc.metadata.pageNumber as number,
           text: relevantSection, // Most relevant section for display
-          fullText: content // Store full chunk for highlighting
+          fullText: content, // Store full chunk for reference
+          highlightRange: highlightRange // Specific range to highlight
         };
-      }
-    );
+      });
+
+    // If no pages were explicitly mentioned or no references match, include the most relevant chunks
+    if (references.length === 0) {
+      const topReferences = relevantDocs.slice(0, 3).map((doc: Document) => {
+        const content = doc.pageContent;
+        return {
+          pageNumber: doc.metadata.pageNumber as number,
+          text: content.substring(0, 150),
+          fullText: content,
+          highlightRange: { start: 0, end: Math.min(content.length, 300) }
+        };
+      });
+
+      console.log(`No explicit page references found in response. Including top ${topReferences.length} most relevant chunks.`);
+      references.push(...topReferences);
+    }
 
     return NextResponse.json({
-      response: typeof response === 'string' ? response : response.content,
+      response: responseText,
       references,
     })
   } catch (error) {

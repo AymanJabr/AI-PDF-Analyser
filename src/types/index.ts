@@ -14,6 +14,7 @@ export interface DocumentReference {
   pageNumber: number
   text: string
   fullText?: string // Full chunk text for highlighting
+  highlightRange?: { start: number; end: number } // Specific range to highlight
 }
 
 export interface Message {

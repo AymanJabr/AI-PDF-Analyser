@@ -18,57 +18,97 @@ export default function DocumentPreview({
 }: DocumentPreviewProps) {
   const [currentPage, setCurrentPage] = useState(0)
   const [highlightedText, setHighlightedText] = useState<string | null>(null)
+  const [highlightRange, setHighlightRange] = useState<{ start: number; end: number } | null>(null)
 
   // Update current page when a reference is clicked
   useEffect(() => {
     if (activeReference) {
       // PageNumber is 1-indexed in references but 0-indexed in our state
       setCurrentPage(activeReference.pageNumber - 1)
-      // Use fullText for highlighting when available, fall back to text otherwise
-      setHighlightedText(activeReference.fullText || activeReference.text)
+
+      if (activeReference.highlightRange) {
+        // If we have a highlight range, use it for more targeted highlighting
+        setHighlightRange(activeReference.highlightRange)
+        setHighlightedText(null) // We'll use the range instead of exact text matching
+      } else {
+        // Fall back to the previous behavior if no range is specified
+        setHighlightedText(activeReference.fullText || activeReference.text)
+        setHighlightRange(null)
+      }
     } else {
       setHighlightedText(null)
+      setHighlightRange(null)
     }
   }, [activeReference])
 
   const handlePreviousPage = () => {
     setCurrentPage((prev) => Math.max(0, prev - 1))
     setHighlightedText(null)
+    setHighlightRange(null)
   }
 
   const handleNextPage = () => {
     setCurrentPage((prev) => Math.min(document.pageCount - 1, prev + 1))
     setHighlightedText(null)
+    setHighlightRange(null)
   }
 
   const handlePageSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const pageIndex = parseInt(e.target.value, 10)
     setCurrentPage(pageIndex)
     setHighlightedText(null)
+    setHighlightRange(null)
   }
 
   // Create an array of page numbers for the pagination display
   const pageNumbers = Array.from({ length: document.pageCount }, (_, i) => i)
 
-  // Function to highlight matched text
+  // Function to highlight matched text, now with support for highlight ranges
   const renderPageContent = () => {
-    if (!highlightedText || !document.pageContents[currentPage].includes(highlightedText)) {
-      return document.pageContents[currentPage]
+    const pageContent = document.pageContents[currentPage];
+
+    // If we have a highlight range for this page, use it
+    if (highlightRange) {
+      // Only use the range if it's applicable to the current page content
+      if (highlightRange.start < pageContent.length) {
+        const before = pageContent.substring(0, highlightRange.start);
+        const highlighted = pageContent.substring(
+          highlightRange.start,
+          Math.min(highlightRange.end, pageContent.length)
+        );
+        const after = highlightRange.end < pageContent.length
+          ? pageContent.substring(highlightRange.end)
+          : '';
+
+        return (
+          <>
+            {before}
+            <span className="bg-yellow-200 font-medium">{highlighted}</span>
+            {after}
+          </>
+        );
+      }
     }
 
-    const parts = document.pageContents[currentPage].split(highlightedText)
-    return (
-      <>
-        {parts.map((part, index) => (
-          <React.Fragment key={index}>
-            {part}
-            {index < parts.length - 1 && (
-              <span className="bg-yellow-200 font-medium">{highlightedText}</span>
-            )}
-          </React.Fragment>
-        ))}
-      </>
-    )
+    // Fall back to text-based highlighting if we have highlighted text
+    if (highlightedText && pageContent.includes(highlightedText)) {
+      const parts = pageContent.split(highlightedText)
+      return (
+        <>
+          {parts.map((part, index) => (
+            <React.Fragment key={index}>
+              {part}
+              {index < parts.length - 1 && (
+                <span className="bg-yellow-200 font-medium">{highlightedText}</span>
+              )}
+            </React.Fragment>
+          ))}
+        </>
+      )
+    }
+
+    // Default: just return the content without highlighting
+    return pageContent;
   }
 
   return (
