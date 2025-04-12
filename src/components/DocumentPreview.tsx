@@ -24,7 +24,8 @@ export default function DocumentPreview({
     if (activeReference) {
       // PageNumber is 1-indexed in references but 0-indexed in our state
       setCurrentPage(activeReference.pageNumber - 1)
-      setHighlightedText(activeReference.text)
+      // Use fullText for highlighting when available, fall back to text otherwise
+      setHighlightedText(activeReference.fullText || activeReference.text)
     } else {
       setHighlightedText(null)
     }

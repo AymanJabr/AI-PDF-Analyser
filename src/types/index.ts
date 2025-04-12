@@ -13,6 +13,7 @@ export interface ModelInfo {
 export interface DocumentReference {
   pageNumber: number
   text: string
+  fullText?: string // Full chunk text for highlighting
 }
 
 export interface Message {

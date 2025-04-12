@@ -269,13 +269,37 @@ export async function POST(req: NextRequest) {
     // Generate response
     const response = await model.invoke(prompt)
 
-    // Extract references from relevant docs
+    // Extract references from relevant docs with improved relevance
     const references: DocumentReference[] = relevantDocs.map(
-      (doc: Document) => ({
-        pageNumber: doc.metadata.pageNumber as number,
-        text: doc.pageContent.substring(0, 150), // Truncate for display
-      })
-    )
+      (doc: Document) => {
+        // Find the most relevant part of the document by looking for keyword matches
+        // or use the beginning if no clear relevance signals
+        const content = doc.pageContent;
+        let relevantSection = content.substring(0, 150); // Default to first 150 chars
+
+        // Simple heuristic: try to find parts of the content that contain words from the query
+        const queryWords = message.toLowerCase().split(/\s+/).filter((word: string) =>
+          word.length > 3 && !['what', 'where', 'when', 'how', 'the', 'this', 'that', 'with'].includes(word)
+        );
+
+        for (const word of queryWords) {
+          const index = content.toLowerCase().indexOf(word);
+          if (index >= 0) {
+            // Extract text around the match, centered on the match if possible
+            const start = Math.max(0, index - 75);
+            const end = Math.min(content.length, index + 75);
+            relevantSection = content.substring(start, end);
+            break;
+          }
+        }
+
+        return {
+          pageNumber: doc.metadata.pageNumber as number,
+          text: relevantSection, // Most relevant section for display
+          fullText: content // Store full chunk for highlighting
+        };
+      }
+    );
 
     return NextResponse.json({
       response: typeof response === 'string' ? response : response.content,
