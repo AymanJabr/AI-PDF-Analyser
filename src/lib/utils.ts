@@ -152,12 +152,3 @@ export function parseContextLengthError(errorMessage: string): {
 
   return null;
 }
-
-/**
- * Estimate token count for a given text
- * This is a rough estimate (~4 characters per token for English text)
- */
-export function estimateTokens(text: string): number {
-  // Rough estimate: ~4 chars per token for English text
-  return Math.ceil(text.length / 4);
-}
