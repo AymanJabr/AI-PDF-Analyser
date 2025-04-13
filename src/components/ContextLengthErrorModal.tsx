@@ -12,7 +12,7 @@ export default function ContextLengthErrorModal({
     onClose,
 }: ContextLengthErrorModalProps) {
     return (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
+        <div className='fixed inset-0 bg-[radial-gradient(circle_at_center,_rgba(55,65,81,0.1)_0%,_rgba(17,24,39,0.6)_100%)] backdrop-blur-sm flex items-center justify-center z-50 p-4'>
             <div className='bg-white rounded-lg shadow-lg overflow-hidden max-w-md w-full'>
                 <div className="flex justify-between items-center p-4 border-b">
                     <div className="flex items-center text-red-600">
