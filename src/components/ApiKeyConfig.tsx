@@ -14,10 +14,10 @@ export default function ApiKeyConfig({
 }: ApiKeyConfigProps) {
   const [provider, setProvider] = useState<'openai' | 'anthropic'>('openai')
   const [apiKey, setApiKey] = useState('')
-  const [voyageApiKey, setVoyageApiKey] = useState('')
+  const [openAIApiKey, setOpenAIApiKey] = useState('')
   const [model, setModel] = useState<string>('')
   const [showApiKey, setShowApiKey] = useState(false)
-  const [showVoyageApiKey, setShowVoyageApiKey] = useState(false)
+  const [showOpenAIApiKey, setShowOpenAIApiKey] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [isLoadingModels, setIsLoadingModels] = useState(false)
@@ -80,7 +80,6 @@ export default function ApiKeyConfig({
   useEffect(() => {
     const savedOpenAIKey = getApiKey('openai')
     const savedAnthropicKey = getApiKey('anthropic')
-    const savedVoyageKey = getApiKey('voyage')
     const lastProvider = getLastProvider()
     const lastModel = getLastModel()
 
@@ -97,9 +96,9 @@ export default function ApiKeyConfig({
           }
         })
 
-        // Load Voyage API key if using Anthropic
-        if (lastProvider === 'anthropic' && savedVoyageKey) {
-          setVoyageApiKey(savedVoyageKey)
+        // Always load OpenAI API key if available
+        if (savedOpenAIKey) {
+          setOpenAIApiKey(savedOpenAIKey)
         }
       }
     }
@@ -107,12 +106,13 @@ export default function ApiKeyConfig({
     else if (savedOpenAIKey) {
       setProvider('openai')
       setApiKey(savedOpenAIKey)
+      setOpenAIApiKey(savedOpenAIKey)
       fetchModels('openai', savedOpenAIKey)
     } else if (savedAnthropicKey) {
       setProvider('anthropic')
       setApiKey(savedAnthropicKey)
-      if (savedVoyageKey) {
-        setVoyageApiKey(savedVoyageKey)
+      if (savedOpenAIKey) {
+        setOpenAIApiKey(savedOpenAIKey)
       }
       fetchModels('anthropic', savedAnthropicKey)
     }
@@ -129,22 +129,15 @@ export default function ApiKeyConfig({
       setApiKey(savedKey)
       fetchModels(newProvider, savedKey)
 
-      // Also load the saved Voyage API key when switching to Anthropic
-      if (newProvider === 'anthropic') {
-        const savedVoyageKey = getApiKey('voyage')
-        if (savedVoyageKey) {
-          setVoyageApiKey(savedVoyageKey)
-        }
+      // Always load the OpenAI API key
+      const savedOpenAIKey = getApiKey('openai')
+      if (savedOpenAIKey) {
+        setOpenAIApiKey(savedOpenAIKey)
       }
     } else {
       // Clear API key input and models if no saved key exists for this provider
       setApiKey('')
       setModels([])
-
-      // Clear Voyage API key if switching to OpenAI
-      if (newProvider === 'openai') {
-        setVoyageApiKey('')
-      }
     }
   }
 
@@ -158,6 +151,16 @@ export default function ApiKeyConfig({
       setModels([])
       setModel('')
     }
+
+    // If provider is OpenAI, also update the OpenAI API key
+    if (provider === 'openai') {
+      setOpenAIApiKey(newApiKey)
+    }
+  }
+
+  // Handle OpenAI API key change
+  const handleOpenAIApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setOpenAIApiKey(e.target.value)
   }
 
   // Handle API key blur - fetch models when user completes entering API key
@@ -173,12 +176,12 @@ export default function ApiKeyConfig({
     setSuccess(null)
 
     if (!apiKey) {
-      setError('Please enter an API key')
+      setError(`Please enter an API key for ${provider === 'openai' ? 'OpenAI' : 'Anthropic'}`)
       return
     }
 
-    if (provider === 'anthropic' && !voyageApiKey) {
-      setError('Voyage AI API key is required for Anthropic provider')
+    if (provider === 'anthropic' && !openAIApiKey) {
+      setError('OpenAI API key is required for embeddings, even when using Anthropic')
       return
     }
 
@@ -189,8 +192,14 @@ export default function ApiKeyConfig({
 
     // Store API keys in session storage
     storeApiKey(provider, apiKey)
-    if (provider === 'anthropic') {
-      storeApiKey('voyage', voyageApiKey)
+
+    // Always store OpenAI key
+    if (provider === 'openai') {
+      // OpenAI key is the same as the main API key
+      storeApiKey('openai', apiKey)
+    } else {
+      // For Anthropic, store the separate OpenAI key
+      storeApiKey('openai', openAIApiKey)
     }
 
     // Store the last used provider and model
@@ -204,9 +213,9 @@ export default function ApiKeyConfig({
       model,
     }
 
-    // Add Voyage API key if using Anthropic
+    // If using Anthropic, add the OpenAI API key for embeddings
     if (provider === 'anthropic') {
-      config.voyageApiKey = voyageApiKey
+      config.openAIApiKey = openAIApiKey
     }
 
     // Notify parent component
@@ -219,7 +228,6 @@ export default function ApiKeyConfig({
     // Clear from session storage
     sessionStorage.removeItem(`apiKey_openai`)
     sessionStorage.removeItem(`apiKey_anthropic`)
-    sessionStorage.removeItem(`apiKey_voyage`)
     sessionStorage.removeItem('lastProvider')
     sessionStorage.removeItem('lastModel')
 
@@ -227,7 +235,7 @@ export default function ApiKeyConfig({
     setApiKey('')
     setModel('')
     setModels([])
-    setVoyageApiKey('')
+    setOpenAIApiKey('')
 
     // Show success message
     setSuccess('API keys cleared successfully')
@@ -280,7 +288,7 @@ export default function ApiKeyConfig({
             htmlFor='apiKey'
             className='block text-sm font-medium text-gray-900 mb-1'
           >
-            API Key
+            {provider === 'openai' ? 'OpenAI API Key' : 'Anthropic API Key'}
           </label>
           <div className='relative'>
             <input
@@ -289,7 +297,7 @@ export default function ApiKeyConfig({
               value={apiKey}
               onChange={handleApiKeyChange}
               onBlur={handleApiKeyBlur}
-              placeholder='Enter your API key'
+              placeholder={`Enter your ${provider === 'openai' ? 'OpenAI' : 'Anthropic'} API key`}
               className='w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm placeholder:text-gray-600 text-gray-900'
             />
             <button
@@ -336,26 +344,26 @@ export default function ApiKeyConfig({
         {provider === 'anthropic' && (
           <div className="space-y-2">
             <label
-              htmlFor='voyageApiKey'
+              htmlFor='openAIApiKey'
               className='block text-sm font-medium text-gray-900 mb-1'
             >
-              Voyage AI API Key
+              OpenAI API Key (for embeddings)
             </label>
             <div className="relative">
               <input
-                id='voyageApiKey'
-                type={showVoyageApiKey ? 'text' : 'password'}
-                value={voyageApiKey}
-                onChange={(e) => setVoyageApiKey(e.target.value)}
-                placeholder='Enter your Voyage AI API key'
+                id='openAIApiKey'
+                type={showOpenAIApiKey ? 'text' : 'password'}
+                value={openAIApiKey}
+                onChange={handleOpenAIApiKeyChange}
+                placeholder='Enter your OpenAI API key'
                 className='w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm placeholder:text-gray-600 text-gray-900'
               />
               <button
                 type='button'
-                onClick={() => setShowVoyageApiKey(!showVoyageApiKey)}
+                onClick={() => setShowOpenAIApiKey(!showOpenAIApiKey)}
                 className='absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600 hover:text-gray-800'
               >
-                {showVoyageApiKey ? (
+                {showOpenAIApiKey ? (
                   <EyeOff className='h-4 w-4' />
                 ) : (
                   <Eye className='h-4 w-4' />
@@ -363,14 +371,14 @@ export default function ApiKeyConfig({
               </button>
             </div>
             <p className='mt-1 text-xs text-gray-700'>
-              Required for Anthropic provider. Get your key at{' '}
+              Required even when using Anthropic models. OpenAI embeddings are used for document search.{' '}
               <a
-                href="https://dashboard.voyageai.com/api-keys"
+                href="https://platform.openai.com/api-keys"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline"
               >
-                Voyage AI Dashboard
+                Get your OpenAI key
               </a>
             </p>
           </div>
@@ -429,7 +437,7 @@ export default function ApiKeyConfig({
 
         <button
           type='submit'
-          disabled={!apiKey || !model || isLoadingModels}
+          disabled={!apiKey || !model || isLoadingModels || (provider === 'anthropic' && !openAIApiKey)}
           className='w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-70'
         >
           Save API Settings

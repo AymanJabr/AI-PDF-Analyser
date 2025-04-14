@@ -36,11 +36,11 @@ export default function AppLayout() {
           model,
         }
 
-        // Add Voyage API key if using Anthropic
+        // Add OpenAI API key if using Anthropic
         if (lastProvider === 'anthropic') {
-          const voyageApiKey = getApiKey('voyage')
-          if (voyageApiKey) {
-            config.voyageApiKey = voyageApiKey
+          const openAIApiKey = getApiKey('openai')
+          if (openAIApiKey) {
+            config.openAIApiKey = openAIApiKey
           }
         }
 

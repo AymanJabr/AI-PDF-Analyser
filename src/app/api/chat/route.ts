@@ -5,7 +5,6 @@ import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
 import { Document } from 'langchain/document'
 import { DocumentReference } from '@/types'
 import { OpenAIEmbeddings } from '@langchain/openai'
-import { VoyageEmbeddings } from '@/lib/embeddings'
 import { getDocument } from '@/lib/documentStore'
 import { getApiKey } from '@/lib/utils'
 
@@ -20,20 +19,17 @@ class SimpleVectorStore {
   private embeddings: number[][] = [];
   private provider: 'openai' | 'anthropic';
   private apiKey: string;
-  private voyageApiKey?: string;
 
   constructor(
     documents: Document[],
     embeddings: number[][],
     provider: 'openai' | 'anthropic',
-    apiKey: string,
-    voyageApiKey?: string
+    apiKey: string
   ) {
     this.documents = documents;
     this.embeddings = embeddings;
     this.provider = provider;
     this.apiKey = apiKey;
-    this.voyageApiKey = voyageApiKey;
   }
 
   async similaritySearch(query: string, k: number = 4): Promise<Document[]> {
@@ -89,19 +85,10 @@ class SimpleVectorStore {
   }
 
   private getEmbeddingProvider() {
-    if (this.provider === 'openai') {
-      return new OpenAIEmbeddings({
-        apiKey: this.apiKey,
-      });
-    } else {
-      if (!this.voyageApiKey) {
-        throw new Error('Voyage API key is required for Anthropic provider');
-      }
-      return new VoyageEmbeddings(this.voyageApiKey, {
-        model: 'voyage-3-large',
-        inputType: 'query'
-      });
-    }
+    // Always use OpenAI embeddings regardless of provider
+    return new OpenAIEmbeddings({
+      apiKey: this.apiKey,
+    });
   }
 }
 
@@ -200,40 +187,28 @@ export async function POST(req: NextRequest) {
     // Set up embeddings based on provider
     let documentEmbeddings: number[][] = [];
 
-    if (apiKeyConfig.provider === 'openai') {
-      const embeddings = new OpenAIEmbeddings({
-        apiKey: apiKeyConfig.apiKey,
-      });
-      documentEmbeddings = await embeddings.embedDocuments(
-        docs.map(doc => doc.pageContent)
-      );
-    } else {
-      // For Anthropic, we need to get the Voyage API key
-      const voyageApiKey = apiKeyConfig.voyageApiKey || getApiKey('voyage');
-
-      if (!voyageApiKey) {
-        return NextResponse.json(
-          { error: 'Voyage AI API key is required for Anthropic provider' },
-          { status: 400 }
-        );
-      }
-
-      const embeddings = new VoyageEmbeddings(voyageApiKey, {
-        model: 'voyage-3-large',
-        inputType: 'document'
-      });
-      documentEmbeddings = await embeddings.embedDocuments(
-        docs.map(doc => doc.pageContent)
+    // Check for missing OpenAI API key when using Anthropic
+    if (apiKeyConfig.provider === 'anthropic' && !apiKeyConfig.openAIApiKey) {
+      return NextResponse.json(
+        { error: 'OpenAI API key is required for embeddings when using Anthropic' },
+        { status: 400 }
       );
     }
+
+    // Always use OpenAI embeddings regardless of provider (OpenAI or Anthropic)
+    const embeddings = new OpenAIEmbeddings({
+      apiKey: apiKeyConfig.provider === 'openai' ? apiKeyConfig.apiKey : apiKeyConfig.openAIApiKey || '',
+    });
+    documentEmbeddings = await embeddings.embedDocuments(
+      docs.map(doc => doc.pageContent)
+    );
 
     // Create our custom vector store
     const vectorStore = new SimpleVectorStore(
       docs,
       documentEmbeddings,
       apiKeyConfig.provider,
-      apiKeyConfig.apiKey,
-      apiKeyConfig.voyageApiKey
+      apiKeyConfig.provider === 'openai' ? apiKeyConfig.apiKey : apiKeyConfig.openAIApiKey || ''
     );
 
     // Get relevant documents for the query
