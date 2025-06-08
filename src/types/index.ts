@@ -1,3 +1,4 @@
+// src/types/index.ts
 export interface ApiKeyConfig {
   provider: 'openai' | 'anthropic'
   apiKey: string

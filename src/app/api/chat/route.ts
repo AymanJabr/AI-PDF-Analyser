@@ -6,7 +6,6 @@ import { Document } from 'langchain/document'
 import { DocumentReference } from '@/types'
 import { OpenAIEmbeddings } from '@langchain/openai'
 import { getDocument } from '@/lib/documentStore'
-import { getApiKey } from '@/lib/utils'
 
 // OpenAI default model
 const DEFAULT_OPENAI_MODEL = 'gpt-3.5-turbo'

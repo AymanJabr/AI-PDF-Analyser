@@ -1,3 +1,4 @@
+// src/app/api/models/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { ModelInfo } from '@/types'
 

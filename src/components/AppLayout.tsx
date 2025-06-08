@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { FileText, Settings, X, History } from 'lucide-react'
+import { FileText, Settings, X } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs'
 import DocumentUploader from './DocumentUploader'
 import ApiKeyConfig from './ApiKeyConfig'
