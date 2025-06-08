@@ -5,11 +5,11 @@ import { ProcessedDocument } from '@/types'
 let globalDocuments: Record<string, ProcessedDocument> = {}
 
 // Try to access global context if available (for Next.js)
-if (typeof global !== 'undefined') {
-  if (!global.__pdfDocuments) {
-    global.__pdfDocuments = {}
+if (typeof globalThis !== 'undefined') {
+  if (!globalThis.__pdfDocuments) {
+    globalThis.__pdfDocuments = {}
   }
-  globalDocuments = global.__pdfDocuments
+  globalDocuments = globalThis.__pdfDocuments
 }
 
 // Function to store a document
