@@ -6,12 +6,9 @@ let globalDocuments: Record<string, ProcessedDocument> = {}
 
 // Try to access global context if available (for Next.js)
 if (typeof global !== 'undefined') {
-  // @ts-ignore: Workaround for global variable
   if (!global.__pdfDocuments) {
-    // @ts-ignore: Workaround for global variable
     global.__pdfDocuments = {}
   }
-  // @ts-ignore: Workaround for global variable
   globalDocuments = global.__pdfDocuments
 }
 
